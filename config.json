@@ -26,7 +26,7 @@
     },
     "loss": "nll_loss",
     "metrics": [
-        "accuracy", "top_k_acc"
+        "accuracy", "top_k_acc", "one"
     ],
     "lr_scheduler": {
         "type": "StepLR",
@@ -36,7 +36,9 @@
         }
     },
     "trainer": {
-        "epochs": 20,
+        "type": "Trainer",
+
+        "epochs": 10,
 
         "save_dir": "saved/",
         "save_period": 5,

@@ -89,7 +89,7 @@ def time_since(since, percent):
     return '%s (%s)' % (asMinutes(s), asMinutes(rs))
 
 
-def time_elapsed(since, percent):
+def time_elapsed(since):
     now = time.time()
     s = now - since
     return '%s' % asMinutes(s)

@@ -1,11 +1,14 @@
 import argparse
 import torch
-from tqdm import tqdm
 import data_loader.data_loaders as module_data
 import model.loss as module_loss
 import model.metric as module_metric
 import model.model as module_arch
+import time
+
 from parse_config import ConfigParser
+from tqdm import tqdm
+from utils import time_elapsed
 
 
 def main(config):
@@ -38,8 +41,12 @@ def main(config):
 
     # prepare model for testing
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    logger.info(f"Working on device: {device}")
     model = model.to(device)
     model.eval()
+
+    logger.info('Starting testing...')
+    test_start_time = time.time()
 
     total_loss = 0.0
     total_metrics = torch.zeros(len(metric_fns))
@@ -61,11 +68,18 @@ def main(config):
                 total_metrics[i] += metric(output, target) * batch_size
 
     n_samples = len(data_loader.sampler)
-    log = {'loss': total_loss / n_samples}
+    log = {'loss': round(total_loss / n_samples, 5)}
     log.update({
         met.__name__: total_metrics[i].item() / n_samples for i, met in enumerate(metric_fns)
     })
-    logger.info(log)
+
+    logger.info('Testing Finished.')
+    logger.info('------------ Test Result ------------')
+    for key, value in log.items():
+        logger.info('    {:15s}: {}'.format(str(key), value))
+
+    logger.info(f'Total Test time: {time_elapsed(test_start_time)}')
+    logger.info(f'\nTo view results on tensorboard, run tensorboard --logdir saved/log/')
 
 
 if __name__ == '__main__':

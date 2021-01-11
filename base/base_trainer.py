@@ -4,6 +4,7 @@ import time
 from abc import abstractmethod
 from numpy import inf
 from logger import TensorboardWriter
+from utils import time_elapsed, time_remaining
 
 
 class BaseTrainer:
@@ -60,6 +61,15 @@ class BaseTrainer:
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def _valid_epoch(self, epoch):
+        """
+        Evaluation logic for an epoch
+
+        :param epoch: Current epoch number
+        """
+        raise NotImplementedError
+
     def train(self):
         """
         Full training logic
@@ -69,7 +79,11 @@ class BaseTrainer:
 
         not_improved_count = 0
         for epoch in range(self.start_epoch, self.epochs + 1):
+            epoch_start_time = time.time()
             result = self._train_epoch(epoch)
+            result['epoch time'] = time_elapsed(epoch_start_time)
+            result['Time elapsed'] = time_elapsed(train_start_time)
+            result['Time remaining'] = time_remaining(train_start_time, epoch / self.epochs)
 
             # save logged information into log dict
             log = {'epoch': epoch}
@@ -112,13 +126,11 @@ class BaseTrainer:
             for key, value in log.items():
                 self.logger.info('    {:15s}: {}'.format(str(key), value))
 
-            self.logger.info('------------ Best ------------')
+            self.logger.info('------------- Best --------------')
             for key in self.best_model_metrics_log:
                 self.logger.info('    {:15s}: {}'.format(str(key), self.model_best_metrics[key]))
 
-        train_end_time = time.time()
-        total_train_time = round(train_end_time - train_start_time, 2)
-        self.logger.info(f'Training finished.\nTotal training time: {total_train_time}s')
+        self.logger.info(f'Training finished.\nTotal training time: {time_elapsed(train_start_time)}')
         self.logger.info(f'best model accuracy: {round(self.mnt_best, 3) * 100}%')
 
     def _save_checkpoint(self, epoch, save_best=False):

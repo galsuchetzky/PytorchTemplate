@@ -12,6 +12,7 @@ class Trainer(BaseTrainer):
     """
     Trainer class
     """
+
     def __init__(self, model, criterion, metric_ftns, optimizer, config, device,
                  data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
         super().__init__(model, criterion, metric_ftns, optimizer, config)
@@ -40,7 +41,7 @@ class Trainer(BaseTrainer):
         :param epoch: Integer, current training epoch.
         :return: A log that contains average loss and metric in this epoch.
         """
-        start = time.time()
+
         self.model.train()
         self.train_metrics.reset()
         with tqdm(total=self.data_loader.n_samples) as progbar:
@@ -68,14 +69,13 @@ class Trainer(BaseTrainer):
                 if batch_idx == self.len_epoch:
                     break
                 progbar.update(self.data_loader.init_kwargs['batch_size'])
-                progbar.set_postfix(epoch=epoch, NLL=loss.item())
+                epoch_part = str(epoch) + '/' + str(self.epochs)
+                progbar.set_postfix(epoch=epoch_part, NLL=loss.item())
         log = self.train_metrics.result()
 
         if self.do_validation:
             val_log = self._valid_epoch(epoch)
-            log.update(**{'val_'+k : round(v, 5) for k, v in val_log.items()})
-            log['Time elapsed'] = time_elapsed(start, epoch / self.epochs)
-            log['Time remaining'] = time_remaining(start, epoch / self.epochs)
+            log.update(**{'val_' + k: round(v, 5) for k, v in val_log.items()})
 
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
