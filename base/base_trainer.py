@@ -1,7 +1,10 @@
 import torch
+import time
+
 from abc import abstractmethod
 from numpy import inf
 from logger import TensorboardWriter
+
 
 
 class BaseTrainer:
@@ -58,6 +61,9 @@ class BaseTrainer:
         """
         Full training logic
         """
+        self.logger.info('Starting training...')
+        train_start_time = time.time()
+
         not_improved_count = 0
         for epoch in range(self.start_epoch, self.epochs + 1):
             result = self._train_epoch(epoch)
@@ -97,6 +103,13 @@ class BaseTrainer:
 
             if epoch % self.save_period == 0:
                 self._save_checkpoint(epoch, save_best=best)
+
+
+        train_end_time = time.time()
+        total_train_time = train_end_time - train_start_time
+        self.logger.info(f'Training finished.\nTotal training time: {total_train_time}s')
+
+
 
     def _save_checkpoint(self, epoch, save_best=False):
         """
