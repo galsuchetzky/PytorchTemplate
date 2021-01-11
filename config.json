@@ -36,15 +36,16 @@
         }
     },
     "trainer": {
-        "epochs": 5,
+        "epochs": 20,
 
         "save_dir": "saved/",
-        "save_period": 1,
+        "save_period": 5,
         "verbosity": 1,
         
-        "monitor": "min val_loss",
+        "monitor": "max val_accuracy",
         "early_stop": 10,
 
-        "tensorboard": true
+        "tensorboard": true,
+        "best_metrics_log": "epoch loss accuracy val_loss val_accuracy"
     }
 }

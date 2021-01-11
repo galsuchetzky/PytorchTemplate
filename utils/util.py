@@ -72,7 +72,7 @@ class MetricTracker:
         return self._data.average[key]
 
     def result(self):
-        return dict(self._data.average)
+        return {k: round(v, 5) for k, v in dict(self._data.average).items()}
 
 
 def asMinutes(s):

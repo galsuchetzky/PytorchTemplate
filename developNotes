@@ -1,0 +1,18 @@
+print device for testing
+change time to hours, minutes, seconds and not only seconds
+add more metrics to the configuration
+check tensorboard and comet
+add visualization of examples and predictions (maybe using tensorboard)
+add function to visualize random (or indexed) examples and labels from the dataset
+
+Break:
+Create environment file (take from the other template)
+download dataset from huggingface
+download spacy tokenizer
+define dataloader
+define seq2seq model
+get embeddings
+define trainer
+define evaluator
+define predictor
+download glove embeddings

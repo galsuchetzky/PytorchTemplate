@@ -6,11 +6,11 @@ from numpy import inf
 from logger import TensorboardWriter
 
 
-
 class BaseTrainer:
     """
     Base class for all trainers
     """
+
     def __init__(self, model, criterion, metric_ftns, optimizer, config):
         self.config = config
         self.logger = config.get_logger('trainer', config['trainer']['verbosity'])
@@ -21,6 +21,7 @@ class BaseTrainer:
         self.optimizer = optimizer
 
         cfg_trainer = config['trainer']
+        self.best_model_metrics_log = cfg_trainer['best_metrics_log'].split()
         self.epochs = cfg_trainer['epochs']
         self.save_period = cfg_trainer['save_period']
         self.monitor = cfg_trainer.get('monitor', 'off')
@@ -37,6 +38,8 @@ class BaseTrainer:
             self.early_stop = cfg_trainer.get('early_stop', inf)
             if self.early_stop <= 0:
                 self.early_stop = inf
+
+        self.model_best_metrics = {}
 
         self.start_epoch = 1
 
@@ -68,13 +71,9 @@ class BaseTrainer:
         for epoch in range(self.start_epoch, self.epochs + 1):
             result = self._train_epoch(epoch)
 
-            # save logged informations into log dict
+            # save logged information into log dict
             log = {'epoch': epoch}
             log.update(result)
-
-            # print logged informations to the screen
-            for key, value in log.items():
-                self.logger.info('    {:15s}: {}'.format(str(key), value))
 
             # evaluate model performance according to configured metric, save best checkpoint as model_best
             best = False
@@ -91,8 +90,11 @@ class BaseTrainer:
 
                 if improved:
                     self.mnt_best = log[self.mnt_metric]
+                    self.model_best_metrics = log
                     not_improved_count = 0
                     best = True
+                    self.logger.info("BEST MODEL FOUND, SAVING")
+                    self._save_checkpoint(epoch, save_best=best)
                 else:
                     not_improved_count += 1
 
@@ -102,14 +104,22 @@ class BaseTrainer:
                     break
 
             if epoch % self.save_period == 0:
-                self._save_checkpoint(epoch, save_best=best)
+                self.logger.info("Saving current model (save period)...")
+                self._save_checkpoint(epoch)
 
+            # print logged information to the screen
+            self.logger.info('------------ Current ------------')
+            for key, value in log.items():
+                self.logger.info('    {:15s}: {}'.format(str(key), value))
+
+            self.logger.info('------------ Best ------------')
+            for key in self.best_model_metrics_log:
+                self.logger.info('    {:15s}: {}'.format(str(key), self.model_best_metrics[key]))
 
         train_end_time = time.time()
-        total_train_time = train_end_time - train_start_time
+        total_train_time = round(train_end_time - train_start_time, 2)
         self.logger.info(f'Training finished.\nTotal training time: {total_train_time}s')
-
-
+        self.logger.info(f'best model accuracy: {round(self.mnt_best, 3) * 100}%')
 
     def _save_checkpoint(self, epoch, save_best=False):
         """
@@ -134,7 +144,6 @@ class BaseTrainer:
         if save_best:
             best_path = str(self.checkpoint_dir / 'model_best.pth')
             torch.save(state, best_path)
-            self.logger.info("Saving current best: model_best.pth ...")
 
     def _resume_checkpoint(self, resume_path):
         """
