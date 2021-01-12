@@ -107,6 +107,8 @@ class EncoderDecoder(BaseModel):
         self.dec_hidden_size = dec_hidden_size
         self.vocab = vocab
         self.output_size = self.vocab.n_tokens
+        self.encoder = EncoderRNN(self.enc_input_size, self.enc_hidden_size, self.vocab)
+        self.decoder = DecoderSimple(self.enc_input_size, self.enc_hidden_size, self.vocab)
 
 
     def forward(self, targets, h, evaluation_mode=False, **kwargs):

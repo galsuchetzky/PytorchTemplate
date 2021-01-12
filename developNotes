@@ -3,12 +3,19 @@ add function to visualize random (or indexed) examples and labels from the datas
 
 Break:
 Create environment file (take from the other template)
-download dataset from huggingface
-download spacy tokenizer
+test spacy tokenizer
 define dataloader
+    finish lexicon file
+    get_random_exmaple
+
 define seq2seq model
+    complete the EncoderDecoder
+    find solution for the vocabs
 get embeddings
+    download embeddings on need
+
 define trainer
 define evaluator
 define predictor
-download glove embeddings
+
+
