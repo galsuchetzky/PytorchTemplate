@@ -79,7 +79,7 @@ def main(config):
         logger.info('    {:15s}: {}'.format(str(key), value))
 
     logger.info(f'Total Test time: {time_elapsed(test_start_time)}')
-    logger.info(f'\nTo view results on tensorboard, run tensorboard --logdir saved/log/')
+    logger.info(f'\nTo view results on tensorboard, run: tensorboard --logdir saved/log/')
 
 
 if __name__ == '__main__':

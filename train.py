@@ -11,13 +11,13 @@ from parse_config import ConfigParser
 import trainer.trainer as trainer_module
 from utils import prepare_device
 
-
 # fix random seeds for reproducibility
 SEED = 123
 torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
+
 
 def main(config):
     logger = config.get_logger('train')
@@ -48,18 +48,13 @@ def main(config):
 
     cfg_trainer = config['trainer']
     trainer_class = getattr(trainer_module, cfg_trainer['type'])
-    # # trainer = config.init_obj('Trainer', trainer_module, model, criterion, metrics, optimizer,
-    #                   config=config,
-    #                   device=device,
-    #                   data_loader=data_loader,
-    #                   valid_data_loader=valid_data_loader,
-    #                   lr_scheduler=lr_scheduler)
+
     trainer = trainer_class(model, criterion, metrics, optimizer,
-                      config=config,
-                      device=device,
-                      data_loader=data_loader,
-                      valid_data_loader=valid_data_loader,
-                      lr_scheduler=lr_scheduler)
+                            config=config,
+                            device=device,
+                            data_loader=data_loader,
+                            valid_data_loader=valid_data_loader,
+                            lr_scheduler=lr_scheduler)
 
     trainer.train()
 

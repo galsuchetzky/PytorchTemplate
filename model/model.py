@@ -47,9 +47,10 @@ class EncoderRNN(BaseModel):
         return torch.zeros(1, 1, self.hidden_size)
 
 
-class DecoderSimple(nn.Module):
+class DecoderSimple(BaseModel):
     def __init__(self, input_size, hidden_size, vocab, **kwargs):
         super().__init__()
+
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.vocab = vocab
@@ -94,3 +95,19 @@ class DecoderSimple(nn.Module):
         outputs = torch.vstack(outputs)
         ### --------------
         return outputs
+
+
+class EncoderDecoder(BaseModel):
+    def __init__(self, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, vocab):
+        super().__init__()
+
+        self.enc_input_size = enc_input_size
+        self.dec_input_size = dec_input_size
+        self.enc_hidden_size = enc_hidden_size
+        self.dec_hidden_size = dec_hidden_size
+        self.vocab = vocab
+        self.output_size = self.vocab.n_tokens
+
+
+    def forward(self, targets, h, evaluation_mode=False, **kwargs):
+        pass

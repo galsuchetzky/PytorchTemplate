@@ -1,5 +1,8 @@
 torch>=1.1
-torchvision
-numpy
-tqdm
+torchvision~=0.2.2.post3
+numpy~=1.19.5
+tqdm~=4.56.0
 tensorboard>=1.14
+
+pandas~=1.2.0
+nlp~=0.4.0

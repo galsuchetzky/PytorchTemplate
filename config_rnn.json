@@ -3,12 +3,12 @@
     "n_gpu": 1,
 
     "arch": {
-        "type": "EncoderDecocder",
+        "type": "EncoderDecoder",
         "args": {
-            "enc_hidden_size": 256,
             "enc_input_size": 256,
-            "dec_hidden_size": 256,
-            "dec_input_size": 256
+            "dec_input_size": 256,
+            "enc_hidden_size": 256,
+            "dec_hidden_size": 256
         }
     },
     "data_loader": {
