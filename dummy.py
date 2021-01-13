@@ -30,8 +30,13 @@
 from data_loader.data_loaders import BREAKDataLoader
 
 dataset = BREAKDataLoader('data/', 128, True, 0.1, 2)
+validation_split = dataset.split_validation()
 
 random_example = dataset.dataset.get_random_example()
+for part in random_example:
+    print(part)
+
+random_example = validation_split.dataset.get_random_example()
 for part in random_example:
     print(part)
 

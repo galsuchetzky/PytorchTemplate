@@ -44,10 +44,10 @@
         "save_period": 5,
         "verbosity": 1,
         
-        "monitor": "max val_accuracy",
+        "monitor": "max accuracy",
         "early_stop": 10,
 
         "tensorboard": true,
-        "best_metrics_log": "epoch loss accuracy val_loss val_accuracy"
+        "best_metrics_log": "epoch loss accuracy"
     }
 }
