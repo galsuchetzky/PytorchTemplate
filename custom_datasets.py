@@ -1,6 +1,7 @@
 import torch.utils.data as data
 import numpy as np
 import spacy
+import logging
 
 from nlp import load_dataset
 from pathlib import Path
@@ -14,8 +15,11 @@ class BREAKLogical(data.Dataset):
     """
 
     def __init__(self, data_dir, train=True, valid=False):
-        super(BREAKLogical, self).__init__()
+        # Define logger
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.INFO)
 
+        super(BREAKLogical, self).__init__()
         # Load dataset and lexicon
         dataset_type = 'test'
         if train:
@@ -23,11 +27,14 @@ class BREAKLogical(data.Dataset):
             if valid:
                 dataset_type = 'validation'
 
+        self.logger.info('Downloading and preparing datasets...')
         self.dataset_logical = load_dataset('break_data', 'logical-forms', cache_dir=data_dir)
         self.lexicon_dict = self.get_lexicon()[dataset_type]
+        self.logger.info('datasets ready.')
 
         # Download spacy language model
         if not spacy.util.is_package("en_core_web_sm"):
+            self.logger.info('Downloading spacy english core...')
             run(['python', '-m', 'spacy', 'download', 'en'])
 
         self.questions = self.dataset_logical[dataset_type]['question_text']
@@ -46,7 +53,7 @@ class BREAKLogical(data.Dataset):
         return self[idx]
 
     def create_matching_lexicon(self, dir_path, file_name):
-        print('creating lex')
+        self.logger.info('Creating lexicon...')
         dataset_qdmr_lexicon = load_dataset('break_data', 'QDMR-lexicon', cache_dir='.\\data\\')
 
         lexicon_dict = {'train': dict(), 'validation': dict(), 'test': dict()}
@@ -62,12 +69,12 @@ class BREAKLogical(data.Dataset):
                         lex_idx = j + 1
                         break
         save_obj(dir_path, lexicon_dict, file_name)
+        self.logger.info('Done creating lexicon.')
 
     def get_lexicon(self):
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "lexicon_by_logical"
         file_name = "lexicon.pkl"
-        print(dir_path / file_name)
         if not (dir_path / file_name).is_file():
             self.create_matching_lexicon(dir_path, file_name)
         data = load_obj(dir_path, file_name)

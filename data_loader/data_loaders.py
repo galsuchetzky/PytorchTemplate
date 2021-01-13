@@ -2,7 +2,6 @@ import custom_datasets
 
 from torchvision import datasets, transforms
 from base import BaseDataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
 
 
 class MnistDataLoader(BaseDataLoader):

@@ -27,41 +27,40 @@
 #     print(a, logical['train'][777][a])
 # print('question_text', qdmr_lexicon['train'][lex_train[777]]['source'])
 
-from data_loader.data_loaders import BREAKDataLoader
+# from data_loader.data_loaders import BREAKDataLoader
+# dataset = BREAKDataLoader('data/', 128, True, 0.1, 2)
+# validation_split = dataset.split_validation()
+#
+# random_example = dataset.dataset.get_random_example()
+# for part in random_example:
+#     print(part)
+#
+# random_example = validation_split.dataset.get_random_example()
+# for part in random_example:
+#     print(part)
 
-dataset = BREAKDataLoader('data/', 128, True, 0.1, 2)
-validation_split = dataset.split_validation()
+from abc import abstractmethod
 
-random_example = dataset.dataset.get_random_example()
-for part in random_example:
-    print(part)
 
-random_example = validation_split.dataset.get_random_example()
-for part in random_example:
-    print(part)
+class A:
+    @abstractmethod
+    def a(self):
+        print('A')
 
-# from abc import abstractmethod
-#
-#
-# class A:
-#     @abstractmethod
-#     def a(self):
-#         print('A')
-#
-#
-# class B(A):
-#     def a(self):
-#         print('B')
-#
-#
-# class C(A):
-#     pass
-#
-#
-# a = A()
-# b = B()
-# c = C()
-#
-# a.a()
-# b.a()
-# c.a()
+
+class B(A):
+    def a(self):
+        print('B')
+
+
+class C(A):
+    pass
+
+
+a = A()
+b = B()
+c = C()
+
+a.a()
+b.a()
+c.a()
