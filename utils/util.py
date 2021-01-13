@@ -18,14 +18,14 @@ def ensure_dir(dirname):
 
 def save_obj(dir_path, obj, name):
     Path(dir_path).mkdir(parents=True, exist_ok=True)
-    file_path = dir_path / (name + '.pkl')
+    file_path = dir_path / (name)
     if not file_path.is_file():
         with open(str(file_path), 'wb') as f:
             pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 
 def load_obj(dir_path, name):
-    file_path = dir_path / (name + '.pkl')
+    file_path = dir_path / (name)
     with open(str(file_path), 'rb') as f:
         return pickle.load(f)
 

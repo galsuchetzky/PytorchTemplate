@@ -4,7 +4,7 @@ import time
 
 from torchvision.utils import make_grid
 from base import BaseTrainer
-from utils import inf_loop, MetricTracker, time_elapsed, time_remaining
+from utils import inf_loop, MetricTracker
 from tqdm import tqdm
 
 

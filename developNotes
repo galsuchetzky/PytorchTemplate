@@ -1,12 +1,13 @@
 add visualization of examples and predictions (maybe using tensorboard)
 add function to visualize random (or indexed) examples and labels from the dataset
-
+add loggers to the downloads and preprocessing in the custom_datasets and data_loaders
 Break:
+dataloader is only loading the data, need to define a Dataset
+the dataset dataloader devides randomly the train and dev sets, so we need to overcome this.
+
 Create environment file (take from the other template)
 test spacy tokenizer
-define dataloader
-    finish lexicon file
-    get_random_exmaple
+
 
 define seq2seq model
     complete the EncoderDecoder

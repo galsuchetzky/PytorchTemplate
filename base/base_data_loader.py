@@ -1,13 +1,16 @@
 import numpy as np
+
 from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
 from torch.utils.data.sampler import SubsetRandomSampler
+from abc import abstractmethod
 
 
 class BaseDataLoader(DataLoader):
     """
     Base class for all data loaders
     """
+
     def __init__(self, dataset, batch_size, shuffle, validation_split, num_workers, collate_fn=default_collate):
         self.validation_split = validation_split
         self.shuffle = shuffle
@@ -27,6 +30,11 @@ class BaseDataLoader(DataLoader):
         super().__init__(sampler=self.sampler, **self.init_kwargs)
 
     def _split_sampler(self, split):
+        """
+        Splits the dataset into train and dev sets.
+        :param split: If integer, treats as index for split. If float, treats as percent.
+        :return: the samplers.
+        """
         if split == 0.0:
             return None, None
 
@@ -40,6 +48,7 @@ class BaseDataLoader(DataLoader):
             assert split < self.n_samples, "validation set size is configured to be larger than entire dataset."
             len_valid = split
         else:
+            assert split <= 1, "split should be lesser then 1 if float."
             len_valid = int(self.n_samples * split)
 
         valid_idx = idx_full[0:len_valid]
@@ -54,6 +63,7 @@ class BaseDataLoader(DataLoader):
 
         return train_sampler, valid_sampler
 
+    @abstractmethod
     def split_validation(self):
         if self.valid_sampler is None:
             return None
