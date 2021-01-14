@@ -2,8 +2,8 @@ import torch.utils.data as data
 import numpy as np
 import spacy
 import logging
-from logger import setup_logging, LOGGER_SETUP
 
+from logger import setup_logging, LOGGER_SETUP
 from nlp import load_dataset
 from pathlib import Path
 from utils import save_obj, load_obj
@@ -12,10 +12,17 @@ from subprocess import run
 
 class BREAKLogical(data.Dataset):
     """
-    The Break dataset: https://github.com/allenai/Break
+    The Break dataset: https://github.com/allenai/Break.
     """
 
     def __init__(self, data_dir, train=True, valid=False):
+        """
+        Initiates the Bread dataset.
+        :param data_dir (str):  Path to the data in which to save/ from which to read the dataset.
+        :param train:           True to load the train data, False to load the test data.
+        :param valid:           If train is False, ignored. If train is True, then valid=True will load the validation
+                                data and valid=False will load the train data.
+        """
         # Define logger
         if not LOGGER_SETUP:
             setup_logging()
@@ -30,6 +37,7 @@ class BREAKLogical(data.Dataset):
             if valid:
                 dataset_type = 'validation'
 
+        # Download and preprocess the BREAK dataset (logical form and lexicon)
         self.logger.info('Downloading and preparing datasets...')
         self.dataset_logical = load_dataset('break_data', 'logical-forms', cache_dir=data_dir)
         self.lexicon_dict = self.get_lexicon()[dataset_type]
@@ -44,14 +52,27 @@ class BREAKLogical(data.Dataset):
         self.golds = self.dataset_logical[dataset_type]['decomposition']
 
     def __getitem__(self, idx):
+        """
+        Retrieves an example from the dataset.
+        :param idx: The index of the example to retrieve.
+        :return: The retrieved example.
+        """
         example = (self.questions[idx], self.golds[idx], self.lexicon_dict[idx])
         return example
 
     def __len__(self):
+        """
+        :return: The amount of examples in the dataset.
+        """
         return len(self.questions)
 
-    def get_random_example(self, idx=-1):
-        if idx == -1:
+    def get_example(self, idx=-1):
+        """
+        Retrieves an example from the dataset.
+        :param idx: the index of the example to retrieve, if negative returns a random example.
+        :return: the retrieved example.
+        """
+        if idx < 0:
             idx = np.random.randint(len(self))
         return self[idx]
 
