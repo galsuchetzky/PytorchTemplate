@@ -9,10 +9,19 @@ from utils import time_elapsed, time_remaining
 
 class BaseTrainer:
     """
-    Base class for all trainers
+    Base class for all trainers.
+    Handles the training loop, logging, saving checkpoints, timings and presenting the training results.
     """
 
     def __init__(self, model, criterion, metric_ftns, optimizer, config):
+        """
+        Initiates the Base trainer.
+        :param model: The model to train.
+        :param criterion: The loss function.
+        :param metric_ftns:
+        :param optimizer:
+        :param config:
+        """
         self.config = config
         self.logger = config.get_logger('trainer', config['trainer']['verbosity'])
 

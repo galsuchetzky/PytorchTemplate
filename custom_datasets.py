@@ -19,7 +19,7 @@ class BREAKLogical(data.Dataset):
         # Define logger
         if not LOGGER_SETUP:
             setup_logging()
-        self.logger = logging.getLogger('BREAK')
+        self.logger = logging.getLogger('BREAKLogical')
         self.logger.setLevel(logging.INFO)
 
         super(BREAKLogical, self).__init__()

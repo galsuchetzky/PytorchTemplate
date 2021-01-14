@@ -11,7 +11,7 @@ class BaseModel(nn.Module):
     def forward(self, *inputs):
         """
         Forward pass logic
-
+        :param inputs: the inputs to the forward pass.
         :return: Model output
         """
         raise NotImplementedError
