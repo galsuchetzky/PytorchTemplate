@@ -1,4 +1,4 @@
-import custom_datasets
+from data_loader import custom_datasets
 
 from torchvision import datasets, transforms
 from base import BaseDataLoader

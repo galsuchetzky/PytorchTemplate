@@ -57,7 +57,7 @@ class BREAKLogical(data.Dataset):
 
     def create_matching_lexicon(self, dir_path, file_name):
         self.logger.info('Creating lexicon...')
-        dataset_qdmr_lexicon = load_dataset('break_data', 'QDMR-lexicon', cache_dir='.\\data\\')
+        dataset_qdmr_lexicon = load_dataset('break_data', 'QDMR-lexicon', cache_dir='../data\\')
 
         lexicon_dict = {'train': dict(), 'validation': dict(), 'test': dict()}
         for data_split in self.dataset_logical:

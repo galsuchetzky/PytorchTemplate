@@ -96,9 +96,9 @@ class BaseDataLoader(DataLoader):
     @abstractmethod
     def split_validation(self):
         """
-        Generate the validation Dataloader.
-        :return: The generated dataloader.
-        Note: this function is abstract so that child dataloaders could define their own validation dataloader.
+        Generate the validation DataLoader.
+        :return: The generated DataLoader.
+        Note: this function is abstract so that child DataLoaders could define their own validation DataLoader.
         """
         if self.valid_sampler is None:
             return None
