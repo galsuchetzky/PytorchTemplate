@@ -15,7 +15,7 @@ class BaseDataLoader(DataLoader):
 
     def __init__(self, dataset, batch_size, shuffle, validation_split, num_workers, collate_fn=default_collate):
         """
-        Initiates the dataloader with the given parameters and initiates the super class.
+        Initiates the DataLoader with the given parameters and initiates the super class.
         :param dataset (Dataset): dataset from which to load the data.
         :param batch_size (int): how many samples per batch to load.
         :param shuffle (bool): set to ``True`` to have the data reshuffled at every epoch.

@@ -16,11 +16,11 @@ class BaseTrainer:
     def __init__(self, model, criterion, metric_ftns, optimizer, config):
         """
         Initiates the Base trainer.
-        :param model: The model to train.
-        :param criterion: The loss function.
-        :param metric_ftns:
-        :param optimizer:
-        :param config:
+        :param model:       The model to train.
+        :param criterion:   The loss function.
+        :param metric_ftns: The metrics on which the model will be evaluated during evaluation or train time.
+        :param optimizer:   The optimizer to use for optimizing the parameters of the model.
+        :param config:      Configuration file.
         """
         self.config = config
         self.logger = config.get_logger('trainer', config['trainer']['verbosity'])
@@ -30,27 +30,34 @@ class BaseTrainer:
         self.metric_ftns = metric_ftns
         self.optimizer = optimizer
 
+        # Get training configurations
         cfg_trainer = config['trainer']
+
+        # Metrics to display for the best model.
         self.best_model_metrics_log = cfg_trainer['best_metrics_log'].split()
         self.epochs = cfg_trainer['epochs']
-        self.save_period = cfg_trainer['save_period']
+        self.save_period = cfg_trainer['save_period']  # Once in how many epochs to save the models parameters.
+
+        # Metric which will be used to choose the best model
         self.monitor = cfg_trainer.get('monitor', 'off')
 
-        # configuration to monitor model performance and save best
+        # configuration to monitor model performance and save best model.
         if self.monitor == 'off':
             self.mnt_mode = 'off'
             self.mnt_best = 0
         else:
             self.mnt_mode, self.mnt_metric = self.monitor.split()
-            assert self.mnt_mode in ['min', 'max']
+            assert self.mnt_mode in ['min', 'max'], "Invalid monitor mode, should be min or max"
 
             self.mnt_best = inf if self.mnt_mode == 'min' else -inf
             self.early_stop = cfg_trainer.get('early_stop', inf)
             if self.early_stop <= 0:
                 self.early_stop = inf
 
+        # Dictionary to keep the metrics results of the best model.
         self.model_best_metrics = {}
 
+        # The epoch to start working from.
         self.start_epoch = 1
 
         self.checkpoint_dir = config.save_dir
@@ -58,47 +65,50 @@ class BaseTrainer:
         # setup visualization writer instance                
         self.writer = TensorboardWriter(config.log_dir, self.logger, cfg_trainer['tensorboard'])
 
+        # If resume path is given, resume training from checkpoint.
         if config.resume is not None:
             self._resume_checkpoint(config.resume)
 
     @abstractmethod
     def _train_epoch(self, epoch):
         """
-        Training logic for an epoch
+        Training logic for an epoch.
 
-        :param epoch: Current epoch number
+        :param epoch: Current epoch number.
         """
         raise NotImplementedError
 
     @abstractmethod
     def _valid_epoch(self, epoch):
         """
-        Evaluation logic for an epoch
+        Evaluation logic for an epoch.
 
-        :param epoch: Current epoch number
+        :param epoch: Current epoch number.
         """
         raise NotImplementedError
 
     def train(self):
         """
-        Full training logic
+        Full training logic.
         """
+        # Log start and set timer for timing the train.
         self.logger.info('Starting training...')
         train_start_time = time.time()
 
-        not_improved_count = 0
+        not_improved_count = 0  # Counts the amount of epochs where no new best model is found.
         for epoch in range(self.start_epoch, self.epochs + 1):
+            # Train for one epoch and time it.
             epoch_start_time = time.time()
             result = self._train_epoch(epoch)
             result['epoch time'] = time_elapsed(epoch_start_time)
             result['Time elapsed'] = time_elapsed(train_start_time)
             result['Time remaining'] = time_remaining(train_start_time, epoch / self.epochs)
 
-            # save logged information into log dict
+            # save logged information into log dict.
             log = {'epoch': epoch}
             log.update(result)
 
-            # evaluate model performance according to configured metric, save best checkpoint as model_best
+            # evaluate model performance according to configured metric, save best checkpoint as model_best.
             best = False
             if self.mnt_mode != 'off':
                 try:
@@ -111,6 +121,7 @@ class BaseTrainer:
                     self.mnt_mode = 'off'
                     improved = False
 
+                # If the model improved, save the best monitored result, the whole log and save the model as best.
                 if improved:
                     self.mnt_best = log[self.mnt_metric]
                     self.model_best_metrics = log
@@ -121,16 +132,18 @@ class BaseTrainer:
                 else:
                     not_improved_count += 1
 
+                # If the model has not improved for self.early_stop epochs, stop the training.
                 if not_improved_count > self.early_stop:
                     self.logger.info("Validation performance didn\'t improve for {} epochs. "
                                      "Training stops.".format(self.early_stop))
                     break
 
+            # Save the model periodically.
             if epoch % self.save_period == 0:
                 self.logger.info("Saving current model (save period)...")
                 self._save_checkpoint(epoch)
 
-            # print logged information to the screen
+            # print logged information to the screen of current and best epochs.
             self.logger.info('------------ Current ------------')
             for key, value in log.items():
                 self.logger.info('    {:15s}: {}'.format(str(key), value))
@@ -144,11 +157,11 @@ class BaseTrainer:
 
     def _save_checkpoint(self, epoch, save_best=False):
         """
-        Saving checkpoints
+        Saving checkpoints.
 
-        :param epoch: current epoch number
-        :param log: logging information of the epoch
-        :param save_best: if True, rename the saved checkpoint to 'model_best.pth'
+        :param epoch: current epoch number.
+        :param log: logging information of the epoch.
+        :param save_best: if True, rename the saved checkpoint to 'model_best.pth'.
         """
         arch = type(self.model).__name__
         state = {
@@ -168,9 +181,8 @@ class BaseTrainer:
 
     def _resume_checkpoint(self, resume_path):
         """
-        Resume from saved checkpoints
-
-        :param resume_path: Checkpoint path to be resumed
+        Resume from saved checkpoints.
+        :param resume_path: Checkpoint path to be resumed.
         """
         resume_path = str(resume_path)
         self.logger.info("Loading checkpoint: {} ...".format(resume_path))
