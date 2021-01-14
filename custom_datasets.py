@@ -2,6 +2,7 @@ import torch.utils.data as data
 import numpy as np
 import spacy
 import logging
+from logger import setup_logging, LOGGER_SETUP
 
 from nlp import load_dataset
 from pathlib import Path
@@ -16,7 +17,9 @@ class BREAKLogical(data.Dataset):
 
     def __init__(self, data_dir, train=True, valid=False):
         # Define logger
-        self.logger = logging.getLogger()
+        if not LOGGER_SETUP:
+            setup_logging()
+        self.logger = logging.getLogger('BREAK')
         self.logger.setLevel(logging.INFO)
 
         super(BREAKLogical, self).__init__()

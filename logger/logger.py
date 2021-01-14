@@ -3,8 +3,10 @@ import logging.config
 from pathlib import Path
 from utils import read_json
 
+LOGGER_SETUP = False
 
-def setup_logging(save_dir, log_config='logger/logger_config.json', default_level=logging.INFO):
+
+def setup_logging(save_dir=Path('saved/log/'), log_config='logger/logger_config.json', default_level=logging.INFO):
     """
     Setup logging configuration
     """
@@ -20,3 +22,7 @@ def setup_logging(save_dir, log_config='logger/logger_config.json', default_leve
     else:
         print("Warning: logging configuration file is not found in {}.".format(log_config))
         logging.basicConfig(level=default_level)
+
+    # For defining loggers without config file.
+    global LOGGER_SETUP
+    LOGGER_SETUP = True

@@ -27,40 +27,66 @@
 #     print(a, logical['train'][777][a])
 # print('question_text', qdmr_lexicon['train'][lex_train[777]]['source'])
 
-# from data_loader.data_loaders import BREAKDataLoader
-# dataset = BREAKDataLoader('data/', 128, True, 0.1, 2)
-# validation_split = dataset.split_validation()
-#
-# random_example = dataset.dataset.get_random_example()
-# for part in random_example:
-#     print(part)
+from data_loader.data_loaders import BREAKDataLoader
+break_dataset = BREAKDataLoader('data/', 128, True, 0.1, 2)
+# validation_split = break_dataset.split_validation()
+
+random_example = break_dataset.dataset.get_random_example()
+for part in random_example:
+    print(part)
 #
 # random_example = validation_split.dataset.get_random_example()
 # for part in random_example:
 #     print(part)
 
-from abc import abstractmethod
+# from abc import abstractmethod
+#
+#
+# class A:
+#     @abstractmethod
+#     def a(self):
+#         print('A')
+#
+#
+# class B(A):
+#     def a(self):
+#         print('B')
+#
+#
+# class C(A):
+#     pass
+#
+#
+# a = A()
+# b = B()
+# c = C()
+#
+# a.a()
+# b.a()
+# c.a()
 
-
-class A:
-    @abstractmethod
-    def a(self):
-        print('A')
-
-
-class B(A):
-    def a(self):
-        print('B')
-
-
-class C(A):
-    pass
-
-
-a = A()
-b = B()
-c = C()
-
-a.a()
-b.a()
-c.a()
+# import logging
+#
+# # create logger
+# logger = logging.getLogger('simple_example')
+# logger.setLevel(logging.DEBUG)
+#
+# # create console handler and set level to debug
+# ch = logging.StreamHandler()
+# ch.setLevel(logging.DEBUG)
+#
+# # create formatter
+# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+#
+# # add formatter to ch
+# ch.setFormatter(formatter)
+#
+# # add ch to logger
+# logger.addHandler(ch)
+#
+# # 'application' code
+# logger.debug('debug message')
+# logger.info('info message')
+# logger.warning('warn message')
+# logger.error('error message')
+# logger.critical('critical message')

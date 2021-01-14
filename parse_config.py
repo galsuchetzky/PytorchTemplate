@@ -92,7 +92,6 @@ class ConfigParser:
         module_args.update(kwargs)
         return getattr(module, module_name)(*args, **module_args)
 
-
     def init_ftn(self, name, module, *args, **kwargs):
         """
         Finds a function handle with the name given as 'type' in config, and returns the
