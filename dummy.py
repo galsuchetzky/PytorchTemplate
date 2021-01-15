@@ -31,7 +31,7 @@ from data_loader.data_loaders import BREAKDataLoader
 break_dataset = BREAKDataLoader('data/', 128, True, 0.1, 2)
 # validation_split = break_dataset.split_validation()
 
-random_example = break_dataset.dataset.get_random_example()
+random_example = break_dataset.dataset.get_example()
 for part in random_example:
     print(part)
 #
