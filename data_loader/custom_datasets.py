@@ -2,6 +2,8 @@ import torch.utils.data as data
 import numpy as np
 import spacy
 import logging
+import ast
+import re
 
 from logger import setup_logging, LOGGER_SETUP
 from nlp import load_dataset
@@ -31,25 +33,49 @@ class BREAKLogical(data.Dataset):
 
         super(BREAKLogical, self).__init__()
         # Load dataset and lexicon
-        dataset_type = 'test'
+        self.dataset_type = 'test'
         if train:
-            dataset_type = 'train'
+            self.dataset_type = 'train'
             if valid:
-                dataset_type = 'validation'
+                self.dataset_type = 'validation'
 
-        # Download and preprocess the BREAK dataset (logical form and lexicon)
-        self.logger.info('Downloading and preparing datasets...')
-        self.dataset_logical = load_dataset('break_data', 'logical-forms', cache_dir=data_dir)
-        self.lexicon_dict = self.get_lexicon()[dataset_type]
-        self.logger.info('datasets ready.')
+        self.dataset_logical = self.load_dataset(data_dir, 'logical-forms', self.logger)
+        self.lexicon_dict = self.get_lexicon()[self.dataset_type]
+        self.logger.info('dataset and lexicon ready.')
 
         # Download spacy language model
         if not spacy.util.is_package("en_core_web_sm"):
             self.logger.info('Downloading spacy english core...')
             run(['python', '-m', 'spacy', 'download', 'en'])
 
-        self.questions = self.dataset_logical[dataset_type]['question_text']
-        self.golds = self.dataset_logical[dataset_type]['decomposition']
+        # Prepare the questions and golds lists.
+        # TODO remove the list slice, it is for debugging.
+        self.questions = self.dataset_logical[self.dataset_type]['question_text'][:200]
+        self.golds = self.dataset_logical[self.dataset_type]['decomposition'][:200]
+        # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
+        self.golds = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.golds]
+
+    @staticmethod
+    def load_dataset(data_dir, dataset_type, logger):
+        """
+        loads the requested Break dataset from Hugging Face.
+        :param data_dir: The path of the directory where the preprocessed dataset should be saved to or loaded from.
+        :param dataset_type: The type of dataset to download from HF.
+        :param logger: A logger for logging events.
+        :return: The loaded dataset.
+        """
+        current_dir = Path()
+        dir_path = current_dir / "data" / "break_data" / "preprocessed"
+        file_name = "dataset_preprocessed_" + dataset_type + ".pkl"
+        if not (dir_path / file_name).is_file():
+            # Download and preprocess the BREAK dataset (logical form and lexicon), and save the preprocessed data.
+            logger.info('Downloading and preparing datasets...')
+            dataset_logical = load_dataset('break_data', dataset_type, cache_dir=data_dir)
+            save_obj(dir_path, dataset_logical, file_name)
+
+        # Load the saved preprocessed data.
+        dataset = load_obj(dir_path, file_name)
+        return dataset
 
     def __getitem__(self, idx):
         """
@@ -57,7 +83,7 @@ class BREAKLogical(data.Dataset):
         :param idx: The index of the example to retrieve.
         :return: The retrieved example.
         """
-        example = (self.questions[idx], self.golds[idx], self.lexicon_dict[idx])
+        example = (self.questions[idx], self.golds[idx])
         return example
 
     def __len__(self):
@@ -77,8 +103,9 @@ class BREAKLogical(data.Dataset):
         return self[idx]
 
     def create_matching_lexicon(self, dir_path, file_name):
+        # TODO add documentation
         self.logger.info('Creating lexicon...')
-        dataset_qdmr_lexicon = load_dataset('break_data', 'QDMR-lexicon', cache_dir='../data\\')
+        dataset_qdmr_lexicon = self.load_dataset(dir_path, 'QDMR-lexicon', self.logger)
 
         lexicon_dict = {'train': dict(), 'validation': dict(), 'test': dict()}
         for data_split in self.dataset_logical:
@@ -92,14 +119,19 @@ class BREAKLogical(data.Dataset):
                         lexicon_dict[data_split][i] = lexicon_example['allowed_tokens']
                         lex_idx = j + 1
                         break
+
         save_obj(dir_path, lexicon_dict, file_name)
         self.logger.info('Done creating lexicon.')
 
     def get_lexicon(self):
+        # TODO add documentation
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "lexicon_by_logical"
         file_name = "lexicon.pkl"
         if not (dir_path / file_name).is_file():
             self.create_matching_lexicon(dir_path, file_name)
         data = load_obj(dir_path, file_name)
+        for type in data:
+            for ex in data[type]:
+                data[type][ex] = ast.literal_eval(data[type][ex])
         return data

@@ -28,12 +28,15 @@
 # print('question_text', qdmr_lexicon['train'][lex_train[777]]['source'])
 
 from data_loader.data_loaders import BREAKDataLoader
+import re
 break_dataset = BREAKDataLoader('data/', 128, True, 0.1, 2)
 # validation_split = break_dataset.split_validation()
 
 random_example = break_dataset.dataset.get_example()
-for part in random_example:
-    print(part)
+
+print(random_example[0])
+print(re.sub(r'#(\d+)', r'@@\1@@', random_example[1]))
+print(sorted(list(set([tok.strip() for tok in random_example[2]]))))
 #
 # random_example = validation_split.dataset.get_random_example()
 # for part in random_example:

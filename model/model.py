@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from base import BaseModel
 
+# TODO add documentation and shapes everywhere.
 
 class MnistModel(BaseModel):
     def __init__(self, num_classes=10):
@@ -24,37 +26,71 @@ class MnistModel(BaseModel):
 
 
 class EncoderRNN(BaseModel):
+    """
+    Simple encoder for seq2seq.
+    """
+
     def __init__(self, input_size, hidden_size, vocab):
+        """
+        :param input_size: The size of the input tensor.
+        :param hidden_size: The size of the hidden state on the RNN.
+        :param vocab: The input vocabulary.
+        """
         super().__init__()
         self.hidden_size = hidden_size
         self.vocab = vocab
 
-        self.embedding = nn.Embedding(self.vocab.n_tokens, hidden_size)
+        self.embedding = nn.Embedding(len(self.vocab), hidden_size)
         self.gru = nn.GRU(input_size, hidden_size)
 
     def forward(self, input, h_0):
+        """
+        Runs the forward pass of the encoder.
+        :param input: The input sequence for the encoder.
+        :param h_0: The final hidden state.
+        :return: the output of the sequence and the initial hidden state.
+        """
         ### YOUR CODE HERE
         # input dim: (seq_len,1)
         # input_embed dim: (seq_len,1, hidden_size)
-        input_embed = self.embedding(input)
+        input_embeds = self.embedding(input)
         # h_0 shape: (1,1,hidden_size)
         # output shape: (seq_len,1, hidden_size)
-        output, h_0 = self.gru(input_embed, h_0)
+        # print('input device:', input_embeds.get_device())
+        # print('hidden device:', h_0.get_device())
+        output, h_0 = self.gru(input_embeds, h_0)
         ### --------------
         return output, h_0
 
     def init_hidden(self):
+        """
+        :return: The initial hidden state of the encoder.
+        """
         return torch.zeros(1, 1, self.hidden_size)
 
 
 class DecoderSimple(BaseModel):
-    def __init__(self, input_size, hidden_size, vocab, **kwargs):
+    """
+    simple decoder for seq2seq.
+    """
+
+    def __init__(self, input_size, enc_hidden_size, hidden_size, vocab, sos_str, eos_str, **kwargs):
+        """
+        :param input_size: The size of the input tensor.
+        :param hidden_size: The size of the hidden states of the decoder.
+        :param vocab: The output vocabulary.
+        :param enc_hidden_size: The size of the encoder hidden state.
+        :param kwargs: Additional arguments.
+        """
         super().__init__()
 
         self.input_size = input_size
         self.hidden_size = hidden_size
+        self.enc_hidden_size = enc_hidden_size
         self.vocab = vocab
-        self.output_size = self.vocab.n_tokens
+        self.output_size = len(self.vocab)
+        self.SOS_STR = sos_str
+        self.EOS_STR = eos_str
 
         self.embedding = nn.Embedding(self.output_size, self.hidden_size)
 
@@ -73,17 +109,18 @@ class DecoderSimple(BaseModel):
         # h dim before (1,1,hidden_size)
         # h dim after (1,hidden_size)
         h = self.W_p(h).squeeze(0)  # Project the last hidden state of the encoder to the input size of the decoder.
-        start_token = torch.tensor(self.vocab.t2i[SOS_STR], device=device).view(1, -1)
-        # targets dim (target_seq_len, 1)
-        targets = torch.cat((start_token,
-                             targets))  # For code simplicity, the first input that is fed to the rnn is the start token, so by setting in to be the first target i can just put it in as the first input.
+        start_token = torch.tensor(self.vocab[self.SOS_STR], device=self.device).view(1, -1)
 
+        # print("device of start:", start_token.get_device())
+        # print("device of targets:", targets.get_device())
+        # targets dim (target_seq_len, 1)
+        targets = torch.cat((start_token, targets))
         for i, target in enumerate(targets[:-1]):
             # target dim (1)
             # input dim  (1, hidden_size)
-            input = s
-            elf.embedding(target)
-            if evaluation_mode and i > 0:  # use the output of the model rather then the target as input only for evaluation
+            input = self.embedding(target)
+            # use the output of the model rather then the target as input only for evaluation
+            if evaluation_mode and i > 0:
                 input = self.embedding(torch.tensor(torch.argmax(output, dim=1)))
 
             h = self.gru_cell(input, h)
@@ -98,7 +135,18 @@ class DecoderSimple(BaseModel):
 
 
 class EncoderDecoder(BaseModel):
+    """
+    Seq2Seq basic.
+    """
+
     def __init__(self, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, vocab):
+        """
+        :param enc_input_size: The dimension of the input embeddings for the encoder.
+        :param dec_input_size: The dimension of the input embeddings for the decoder.
+        :param enc_hidden_size: The size of the encoder hidden state.
+        :param dec_hidden_size: The size of the decoder hidden state.
+        :param vocab: The vocabulary of the input and output.
+        """
         super().__init__()
 
         self.enc_input_size = enc_input_size
@@ -106,10 +154,25 @@ class EncoderDecoder(BaseModel):
         self.enc_hidden_size = enc_hidden_size
         self.dec_hidden_size = dec_hidden_size
         self.vocab = vocab
-        self.output_size = self.vocab.n_tokens
+        self.output_size = len(self.vocab)
+        self.SOS_STR = '<sos>'
+        self.EOS_STR = '<eos>'
         self.encoder = EncoderRNN(self.enc_input_size, self.enc_hidden_size, self.vocab)
-        self.decoder = DecoderSimple(self.enc_input_size, self.enc_hidden_size, self.vocab)
+        self.decoder = DecoderSimple(self.enc_input_size, self.enc_hidden_size, self.dec_hidden_size, self.vocab,
+                                     self.SOS_STR, self.EOS_STR)
 
+    def forward(self, input_tensor, target_tensor, evaluation_mode=False, **kwargs):
+        # print("the device is:", self.device)
+        # Set devices for child models
+        if self.encoder.device != self.device:
+            self.encoder.set_device(self.device)
+        if self.decoder.device != self.device:
+            self.decoder.set_device(self.device)
 
-    def forward(self, targets, h, evaluation_mode=False, **kwargs):
-        pass
+        encoder_hidden_first = self.encoder.init_hidden().to(self.device)
+        encoder_outputs, encoder_h_m = self.encoder(input_tensor, encoder_hidden_first)
+        decoder_hidden = encoder_h_m
+        decoder_outputs = self.decoder(target_tensor, decoder_hidden,
+                                       enc_input=input_tensor, enc_outputs=encoder_outputs)
+
+        return decoder_outputs

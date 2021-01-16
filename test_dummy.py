@@ -30,7 +30,7 @@ LOGICAL = load_dataset('break_data', 'logical-forms', cache_dir='.\\data\\')
 # for p in QDMR['train'][70]:
 # 	print(p, QDMR['train'][70][p])
 # print("------------------------------------")
-print("LEXICON len of train", len(LEXICON['train']), "************")
+# print("LEXICON len of train", len(LEXICON['train']), "************")
 
 # for p in LEXICON['train'][40096]:
 # 	print(p, LEXICON['train'][40096][p])
@@ -74,8 +74,8 @@ data_split = 'validation'
 print("took ", time.time() - start, "sec")
 for k in lexicon_check:
 	print(k)
-print("check len", len(lexicon_check['train']), "************")
-print("train_map len", len(lexicon_dict['train']), "************")
+# print("check len", len(lexicon_check['train']), "************")
+# print("train_map len", len(lexicon_dict['train']), "************")
 #
 # # for p in train_check[200]:
 # print(train_check[index_check])

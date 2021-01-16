@@ -8,14 +8,20 @@
             "enc_input_size": 256,
             "dec_input_size": 256,
             "enc_hidden_size": 256,
-            "dec_hidden_size": 256
+            "dec_hidden_size": 256,
+            "vocab": {
+                "module": "data_loader.vocabs",
+                "type": "BREAK_vocab_simple",
+                "args": {}
+            }
         }
     },
+
     "data_loader": {
         "type": "BREAKDataLoader",
         "args":{
             "data_dir": "data/",
-            "batch_size": 128,
+            "batch_size": 1,
             "shuffle": true,
             "validation_split": 0,
             "num_workers": 2
@@ -29,9 +35,9 @@
             "amsgrad": true
         }
     },
-    "loss": "nll_loss",
+    "loss": "CrossEntropyLoss",
     "metrics": [
-        "accuracy", "top_k_acc", "one"
+        "accuracy_qdmr"
     ],
     "lr_scheduler": {
         "type": "StepLR",
@@ -41,18 +47,24 @@
         }
     },
     "trainer": {
-        "type": "Trainer",
+        "type": "Seq2SeqSimpleTrainer",
 
         "epochs": 10,
+
+        "vocab": {
+            "module": "data_loader.vocabs",
+            "type": "BREAK_vocab_simple",
+            "args": {}
+        },
 
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 1,
         
-        "monitor": "max val_accuracy",
+        "monitor": "max val_accuracy_qdmr",
         "early_stop": 10,
 
         "tensorboard": true,
-        "best_metrics_log": "epoch loss accuracy val_loss val_accuracy"
+        "best_metrics_log": "epoch loss accuracy_qdmr val_loss val_accuracy_qdmr"
     }
 }

@@ -6,17 +6,22 @@ from operator import getitem
 from datetime import datetime
 from logger import setup_logging
 from utils import read_json, write_json
+from importlib import import_module
 
+
+# TODO Document this file!!!!
 
 class ConfigParser:
     def __init__(self, config, resume=None, modification=None, run_id=None):
         """
-        class to parse configuration json file. Handles hyperparameters for training, initializations of modules, checkpoint saving
-        and logging module.
-        :param config: Dict containing configurations, hyperparameters for training. contents of `config.json` file for example.
+        class to parse configuration json file. Handles hyperparameters for training, initializations of modules,
+        checkpoint saving and logging module.
+        :param config: Dict containing configurations, hyper-parameters for training. contents of `config.json` file
+        for example.
         :param resume: String, path to the checkpoint being loaded.
         :param modification: Dict keychain:value, specifying position values to be replaced from config dict.
-        :param run_id: Unique Identifier for training processes. Used to save checkpoints and training log. Timestamp is being used as default
+        :param run_id: Unique Identifier for training processes. Used to save checkpoints and training log.
+        Timestamp is being used as default
         """
         # load config file and apply modification
         self._config = _update_config(config, modification)
@@ -86,10 +91,44 @@ class ConfigParser:
         is equivalent to
         `object = module.name(a, b=1)`
         """
-        module_name = self[name]['type']
-        module_args = dict(self[name]['args'])
+        if 'module' not in self[name]:
+            self[name]['module'] = module.__name__
+
+        return ConfigParser.init_obj_recursive(self.config, name, *args, **kwargs)
+
+    @staticmethod
+    def init_obj_recursive(module_dict, name, *args, **kwargs):
+        """
+        Performs recursive initialization of the object arguments and creates the object.
+        See init_obj().
+        :param module_dict: A dictionary containing elements which are types and arguments (see config.json for
+        example)
+        :param name: The name of the attribute.
+        :param args: additional arguments.
+        :param kwargs: additional arguments.
+        :return: The initialized object.
+        """
+        assert 'module' in module_dict[name], "module not specified for " + name
+
+        # Get the module in which the object is defined.
+        module = import_module(module_dict[name]['module'])
+
+        # Get the object name.
+        module_name = module_dict[name]['type']
+
+        # Get the object arguments and perform recursive resolving.
+        tmp_args = dict(module_dict[name]['args'])
+        module_args = {}
+        for arg in tmp_args:
+            if isinstance(tmp_args[arg], dict):
+                module_args[arg] = ConfigParser.init_obj_recursive(tmp_args, arg, *args, **kwargs)
+            else:
+                module_args[arg] = tmp_args[arg]
+
         assert all([k not in module_args for k in kwargs]), 'Overwriting kwargs given in config file is not allowed'
         module_args.update(kwargs)
+
+        # Initiates and returns the object.
         return getattr(module, module_name)(*args, **module_args)
 
     def init_ftn(self, name, module, *args, **kwargs):
