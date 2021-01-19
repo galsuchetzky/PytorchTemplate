@@ -9,19 +9,17 @@ from utils import read_json, write_json
 from importlib import import_module
 
 
-# TODO Document this file!!!!
-
 class ConfigParser:
     def __init__(self, config, resume=None, modification=None, run_id=None):
         """
-        class to parse configuration json file. Handles hyperparameters for training, initializations of modules,
+        class to parse configuration json file. Handles hyper-parameters for training, initializations of modules,
         checkpoint saving and logging module.
-        :param config: Dict containing configurations, hyper-parameters for training. contents of `config.json` file
-        for example.
-        :param resume: String, path to the checkpoint being loaded.
-        :param modification: Dict keychain:value, specifying position values to be replaced from config dict.
-        :param run_id: Unique Identifier for training processes. Used to save checkpoints and training log.
-        Timestamp is being used as default
+        :param config:          Dict containing configurations, hyper-parameters for training. contents of
+                                `config.json` file for example.
+        :param resume:          String, path to the checkpoint being loaded.
+        :param modification:    Dict keychain:value, specifying position values to be replaced from config dict.
+        :param run_id:          Unique Identifier for training processes. Used to save checkpoints and training log.
+                                Timestamp is being used as default
         """
         # load config file and apply modification
         self._config = _update_config(config, modification)
@@ -56,14 +54,22 @@ class ConfigParser:
     def from_args(cls, args, options=''):
         """
         Initialize this class from some cli arguments. Used in train, test.
+        :param args: Arguments from which to initialize the configuration.
+        :param options: additional options to add to the config.
+        :return:
         """
+
+        # Update the arguments with the options.
         for opt in options:
             args.add_argument(*opt.flags, default=None, type=opt.type)
         if not isinstance(args, tuple):
             args = args.parse_args()
 
+        # Set cuda device.
         if args.device is not None:
             os.environ["CUDA_VISIBLE_DEVICES"] = args.device
+
+        # Set training resume file.
         if args.resume is not None:
             resume = Path(args.resume)
             cfg_fname = resume.parent / 'config.json'
@@ -151,6 +157,12 @@ class ConfigParser:
         return self.config[name]
 
     def get_logger(self, name, verbosity=2):
+        """
+        Gets a logger from the loggers.
+        :param name: The name of the logger to get.
+        :param verbosity: The verbosity level of the logger.
+        :return: The logger.
+        """
         msg_verbosity = 'verbosity option {} is invalid. Valid options are {}.'.format(verbosity,
                                                                                        self.log_levels.keys())
         assert verbosity in self.log_levels, msg_verbosity

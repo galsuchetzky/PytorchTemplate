@@ -30,7 +30,7 @@ class BREAKLogical(data.Dataset):
             setup_logging()
         self.logger = logging.getLogger('BREAKLogical')
         self.logger.setLevel(logging.INFO)
-
+        self.logger.info("Preparing dataset")
         super(BREAKLogical, self).__init__()
         # Load dataset and lexicon
         self.dataset_type = 'test'
@@ -56,7 +56,7 @@ class BREAKLogical(data.Dataset):
         self.golds = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.golds]
 
     @staticmethod
-    def load_dataset(data_dir, dataset_type, logger):
+    def load_dataset(data_dir, dataset_type, logger=None):
         """
         loads the requested Break dataset from Hugging Face.
         :param data_dir: The path of the directory where the preprocessed dataset should be saved to or loaded from.
@@ -69,7 +69,8 @@ class BREAKLogical(data.Dataset):
         file_name = "dataset_preprocessed_" + dataset_type + ".pkl"
         if not (dir_path / file_name).is_file():
             # Download and preprocess the BREAK dataset (logical form and lexicon), and save the preprocessed data.
-            logger.info('Downloading and preparing datasets...')
+            if logger:
+                logger.info('Downloading and preparing datasets...')
             dataset_logical = load_dataset('break_data', dataset_type, cache_dir=data_dir)
             save_obj(dir_path, dataset_logical, file_name)
 
@@ -84,7 +85,15 @@ class BREAKLogical(data.Dataset):
         :return: The retrieved example.
         """
         example = (self.questions[idx], self.golds[idx])
-        return example
+        return example[0], self.clean_qdmr(example[1])
+
+    def clean_qdmr(self, qdmr):
+        """
+        Removes the 'return' statement from the beginning of each qdmr entry.
+        :param qdmr: The qdmr to clean.
+        :return: The cleaned qdmr.
+        """
+        return qdmr.replace('return ', '')
 
     def __len__(self):
         """
@@ -125,13 +134,18 @@ class BREAKLogical(data.Dataset):
 
     def get_lexicon(self):
         # TODO add documentation
+        self.logger.info("Preparing lexicon")
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "lexicon_by_logical"
         file_name = "lexicon.pkl"
         if not (dir_path / file_name).is_file():
             self.create_matching_lexicon(dir_path, file_name)
+        self.logger.info("loading lexicon")
         data = load_obj(dir_path, file_name)
+        self.logger.info("lexicon loaded")
+        # TODO what is this?? it's superrrrr slow
         for type in data:
             for ex in data[type]:
                 data[type][ex] = ast.literal_eval(data[type][ex])
+        self.logger.info("done literal eval")
         return data

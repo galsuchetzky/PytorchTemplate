@@ -7,8 +7,8 @@ from base import BaseModel
 # TODO add documentation and shapes everywhere.
 
 class MnistModel(BaseModel):
-    def __init__(self, num_classes=10):
-        super().__init__()
+    def __init__(self, device, num_classes=10):
+        super().__init__(device)
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
         self.conv2_drop = nn.Dropout2d()
@@ -30,13 +30,13 @@ class EncoderRNN(BaseModel):
     Simple encoder for seq2seq.
     """
 
-    def __init__(self, input_size, hidden_size, vocab):
+    def __init__(self, input_size, hidden_size, vocab, device):
         """
         :param input_size: The size of the input tensor.
         :param hidden_size: The size of the hidden state on the RNN.
         :param vocab: The input vocabulary.
         """
-        super().__init__()
+        super().__init__(device)
         self.hidden_size = hidden_size
         self.vocab = vocab
 
@@ -74,7 +74,7 @@ class DecoderSimple(BaseModel):
     simple decoder for seq2seq.
     """
 
-    def __init__(self, input_size, enc_hidden_size, hidden_size, vocab, sos_str, eos_str, **kwargs):
+    def __init__(self, input_size, enc_hidden_size, hidden_size, vocab, sos_str, eos_str, device, **kwargs):
         """
         :param input_size: The size of the input tensor.
         :param hidden_size: The size of the hidden states of the decoder.
@@ -82,7 +82,7 @@ class DecoderSimple(BaseModel):
         :param enc_hidden_size: The size of the encoder hidden state.
         :param kwargs: Additional arguments.
         """
-        super().__init__()
+        super().__init__(device)
 
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -139,7 +139,7 @@ class EncoderDecoder(BaseModel):
     Seq2Seq basic.
     """
 
-    def __init__(self, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, vocab):
+    def __init__(self, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, vocab, device):
         """
         :param enc_input_size: The dimension of the input embeddings for the encoder.
         :param dec_input_size: The dimension of the input embeddings for the decoder.
@@ -147,28 +147,22 @@ class EncoderDecoder(BaseModel):
         :param dec_hidden_size: The size of the decoder hidden state.
         :param vocab: The vocabulary of the input and output.
         """
-        super().__init__()
+        super().__init__(device)
 
         self.enc_input_size = enc_input_size
         self.dec_input_size = dec_input_size
         self.enc_hidden_size = enc_hidden_size
         self.dec_hidden_size = dec_hidden_size
         self.vocab = vocab
+        self.device = device
         self.output_size = len(self.vocab)
         self.SOS_STR = '<sos>'
         self.EOS_STR = '<eos>'
-        self.encoder = EncoderRNN(self.enc_input_size, self.enc_hidden_size, self.vocab)
+        self.encoder = EncoderRNN(self.enc_input_size, self.enc_hidden_size, self.vocab, self.device)
         self.decoder = DecoderSimple(self.enc_input_size, self.enc_hidden_size, self.dec_hidden_size, self.vocab,
-                                     self.SOS_STR, self.EOS_STR)
+                                     self.SOS_STR, self.EOS_STR, self.device)
 
     def forward(self, input_tensor, target_tensor, evaluation_mode=False, **kwargs):
-        # print("the device is:", self.device)
-        # Set devices for child models
-        if self.encoder.device != self.device:
-            self.encoder.set_device(self.device)
-        if self.decoder.device != self.device:
-            self.decoder.set_device(self.device)
-
         encoder_hidden_first = self.encoder.init_hidden().to(self.device)
         encoder_outputs, encoder_h_m = self.encoder(input_tensor, encoder_hidden_first)
         decoder_hidden = encoder_h_m

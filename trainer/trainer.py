@@ -8,6 +8,7 @@ from utils import inf_loop, MetricTracker
 from tqdm import tqdm
 from data_loader import batch_to_tensor
 
+
 # TODO add documentation and complete implementation for the Seq2SeqSimpleTrainer
 class Trainer(BaseTrainer):
     """
@@ -131,9 +132,7 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         super().__init__(model, criterion, metric_ftns, optimizer, config)
         self.config = config
         self.device = device
-        self.model.set_device(self.device)
         self.vocab = ConfigParser.init_obj_recursive(self.config['trainer'], 'vocab')
-        # print("|here")
         self.data_loader = data_loader
 
         if len_epoch is None:
@@ -166,13 +165,11 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
             for batch_idx, (data, target) in enumerate(self.data_loader):
                 data = batch_to_tensor(self.vocab, data).to(self.device)
                 target = batch_to_tensor(self.vocab, target).to(self.device)
-                print(data.shape)
                 # Run the model on the batch
                 self.optimizer.zero_grad()
                 output = self.model(data, target)
 
                 # Calculate the loss and perform optimization step.
-                # output = output.view(-1)
                 target = target.view(-1)
                 loss = self.criterion(output, target)
                 loss.backward()
