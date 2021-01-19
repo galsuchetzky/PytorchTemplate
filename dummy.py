@@ -151,8 +151,6 @@
 # print(a)
 # for i, it in enumerate(torch.transpose(a,0, 1)):
 #     print(i, it)
-
-
 # from tester.BREAK_evaluate_predictions import evaluate, get_exact_match
 # ids = []
 # questions = []
