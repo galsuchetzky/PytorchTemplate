@@ -1,7 +1,7 @@
 import torch
 
 
-def accuracy(output, target):
+def accuracy_MNIST(output, target):
     """
     Tests the accuracy of the prediction to the target.
     :param output: The prediction of the model.
@@ -20,16 +20,15 @@ def accuracy(output, target):
 def accuracy_qdmr(pred, target):
     """
     Tests the EM accuracy of a QDMR batch prediction.
-    :param pred: A batch of predicted QDMRs.
-    :param target: The gold QDMRs.
+    :param pred: A batch of predicted QDMRs. dim: (batch_size, seq_len)
+    :param target: The gold QDMRs. dim: (batch_size, seq_len)
     :return: The percent of correct predictions from the whole batch.
     """
     # TODO make it work correctly on a batch and handle the predictions correctly.
     #  Maybe take from the break original code.
     with torch.no_grad():
-        assert pred.shape[0] == len(target)
-        correct = 0
-        correct += 1 if torch.all(torch.eq(pred, target)) else 0
+        assert pred.shape == target.shape
+        correct = torch.sum(torch.all(torch.eq(pred, target),dim=1))
 
     return correct / len(target)
 

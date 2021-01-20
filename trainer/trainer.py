@@ -7,6 +7,7 @@ from base import BaseTrainer
 from utils import inf_loop, MetricTracker
 from tqdm import tqdm
 from data_loader import batch_to_tensor
+from torch.nn import CrossEntropyLoss
 
 
 # TODO add documentation and complete implementation for the Seq2SeqSimpleTrainer
@@ -129,14 +130,28 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
 
     def __init__(self, model, criterion, metric_ftns, optimizer, config, device,
                  data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
-        super().__init__(model, criterion, metric_ftns, optimizer, config)
+        """
+
+        :param model:
+        :param criterion: we ignore this value and overwrite it
+        :param metric_ftns:
+        :param optimizer:
+        :param config:
+        :param device:
+        :param data_loader:
+        :param valid_data_loader:
+        :param lr_scheduler:
+        :param len_epoch:
+        """
+        # TODO document this
         self.config = config
         self.device = device
-        self.vocab = ConfigParser.init_obj_recursive(self.config['trainer'], 'vocab')
+        self.vocab = model.vocab
         self.data_loader = data_loader
         self.question_pad_length = config['data_loader']['question_pad_length']
         self.qdmr_pad_length = config['data_loader']['qdmr_pad_length']
-
+        self.pad_idx = self.vocab['<pad>']
+        self.criterion = CrossEntropyLoss(ignore_index=self.pad_idx)
         if len_epoch is None:
             # epoch-based training
             self.len_epoch = len(self.data_loader)
@@ -149,6 +164,8 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         self.do_validation = self.valid_data_loader is not None
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
+
+        super().__init__(model, self.criterion, metric_ftns, optimizer, config)
 
         self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
         self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
@@ -171,8 +188,12 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
                 self.optimizer.zero_grad()
                 output = self.model(data, target)
 
+                # loss expects (minibatch, classes, seq_len)
+                # out now is (batch_size, seq_len, output_size)
+                # out after transpose is (batch_size, output_size, seq_len)
+                output = torch.transpose(output, 1, 2)
+
                 # Calculate the loss and perform optimization step.
-                target = target.view(-1)
                 loss = self.criterion(output, target)
                 loss.backward()
                 self.optimizer.step()
@@ -207,6 +228,7 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         log = self.train_metrics.result()
 
         # If validation split exists, evaluate on validation set as well.
+        raise NotImplementedError
         if self.do_validation:
             val_log = self._valid_epoch(epoch)
             log.update(**{'val_' + k: round(v, 5) for k, v in val_log.items()})

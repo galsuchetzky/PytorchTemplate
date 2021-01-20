@@ -39,6 +39,7 @@
         }
     },
     "loss": "CrossEntropyLoss",
+
     "metrics": [
         "accuracy_qdmr"
     ],
@@ -53,12 +54,6 @@
         "type": "Seq2SeqSimpleTrainer",
 
         "epochs": 10,
-
-        "vocab": {
-            "module": "data_loader.vocabs",
-            "type": "BREAK_vocab_simple",
-            "args": {}
-        },
 
         "save_dir": "saved/",
         "save_period": 5,

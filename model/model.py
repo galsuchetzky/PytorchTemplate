@@ -40,7 +40,6 @@ class EncoderRNN(BaseModel):
         self.batch_size = batch_size
         self.hidden_size = hidden_size
         self.vocab = vocab
-        # self.batch_size =
 
         # TODO use padding_idx in embedding
         self.embedding = nn.Embedding(len(self.vocab), hidden_size)
@@ -104,6 +103,8 @@ class DecoderSimple(BaseModel):
 
         # for output
         self.W_s = nn.Linear(self.hidden_size, self.output_size)
+        # TODO maybe replace linear layer with embedding matrix - usually tied to encoder embedding matrix)
+        # TODO add dropout layers
 
     def forward(self, targets, h, evaluation_mode=False, **kwargs):
         ### YOUR CODE HERE

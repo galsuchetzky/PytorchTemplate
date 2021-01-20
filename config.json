@@ -26,7 +26,7 @@
     },
     "loss": "nll_loss",
     "metrics": [
-        "accuracy", "top_k_acc"
+        "accuracy_MNIST", "top_k_acc"
     ],
     "lr_scheduler": {
         "type": "StepLR",
@@ -44,10 +44,10 @@
         "save_period": 5,
         "verbosity": 1,
         
-        "monitor": "max accuracy",
+        "monitor": "max accuracy_MNIST",
         "early_stop": 10,
 
         "tensorboard": true,
-        "best_metrics_log": "epoch loss accuracy"
+        "best_metrics_log": "epoch loss accuracy_MNIST"
     }
 }
