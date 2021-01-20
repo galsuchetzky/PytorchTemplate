@@ -30,18 +30,21 @@ class EncoderRNN(BaseModel):
     Simple encoder for seq2seq.
     """
 
-    def __init__(self, input_size, hidden_size, vocab, device):
+    def __init__(self, batch_size, input_size, hidden_size, vocab, device):
         """
         :param input_size: The size of the input tensor.
         :param hidden_size: The size of the hidden state on the RNN.
         :param vocab: The input vocabulary.
         """
         super().__init__(device)
+        self.batch_size = batch_size
         self.hidden_size = hidden_size
         self.vocab = vocab
+        # self.batch_size =
 
+        # TODO use padding_idx in embedding
         self.embedding = nn.Embedding(len(self.vocab), hidden_size)
-        self.gru = nn.GRU(input_size, hidden_size)
+        self.gru = nn.GRU(input_size, hidden_size, batch_first=True)
 
     def forward(self, input, h_0):
         """
@@ -51,13 +54,11 @@ class EncoderRNN(BaseModel):
         :return: the output of the sequence and the initial hidden state.
         """
         ### YOUR CODE HERE
-        # input dim: (seq_len,1)
-        # input_embed dim: (seq_len,1, hidden_size)
+        # input dim: (batch_size, seq_len)
+        # input_embed dim: (batch_size, seq_len, hidden_size)
         input_embeds = self.embedding(input)
-        # h_0 shape: (1,1,hidden_size)
-        # output shape: (seq_len,1, hidden_size)
-        # print('input device:', input_embeds.get_device())
-        # print('hidden device:', h_0.get_device())
+        # h_0 shape: (1,batch_size,hidden_size)
+        # output shape: (batch_size, seq_len, hidden_size)
         output, h_0 = self.gru(input_embeds, h_0)
         ### --------------
         return output, h_0
@@ -66,7 +67,7 @@ class EncoderRNN(BaseModel):
         """
         :return: The initial hidden state of the encoder.
         """
-        return torch.zeros(1, 64, self.hidden_size)
+        return torch.zeros(1, self.batch_size, self.hidden_size)
 
 
 class DecoderSimple(BaseModel):
@@ -74,7 +75,7 @@ class DecoderSimple(BaseModel):
     simple decoder for seq2seq.
     """
 
-    def __init__(self, input_size, enc_hidden_size, hidden_size, vocab, sos_str, eos_str, device, **kwargs):
+    def __init__(self, batch_size, input_size, enc_hidden_size, hidden_size, vocab, sos_str, eos_str, device, **kwargs):
         """
         :param input_size: The size of the input tensor.
         :param hidden_size: The size of the hidden states of the decoder.
@@ -83,7 +84,7 @@ class DecoderSimple(BaseModel):
         :param kwargs: Additional arguments.
         """
         super().__init__(device)
-
+        self.batch_size = batch_size
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.enc_hidden_size = enc_hidden_size
@@ -92,7 +93,8 @@ class DecoderSimple(BaseModel):
         self.SOS_STR = sos_str
         self.EOS_STR = eos_str
 
-        self.embedding = nn.Embedding(self.output_size, self.hidden_size)
+        # TODO use padding_idx in embedding
+        self.embedding = nn.Embedding(self.output_size, embedding_dim=self.hidden_size)
 
         # for projecting the last hidden state of the encoder to the decoder space,
         # as the first decoder hidden state, in case the two dimensions don't match
@@ -106,30 +108,31 @@ class DecoderSimple(BaseModel):
     def forward(self, targets, h, evaluation_mode=False, **kwargs):
         ### YOUR CODE HERE
         outputs = []  # For keeping the outputs
-        # h dim before (1,1,hidden_size)
-        # h dim after (1,hidden_size)
+        # h dim before (1,batch_size, enc_hidden_size)
+        # h dim after (batch_size, hidden_size)
         h = self.W_p(h).squeeze(0)  # Project the last hidden state of the encoder to the input size of the decoder.
-        start_token = torch.tensor(self.vocab[self.SOS_STR], device=self.device).view(1, -1)
+        # start_token = torch.tensor(self.vocab[self.SOS_STR], device=self.device).view(1, -1)
 
-        # print("device of start:", start_token.get_device())
-        # print("device of targets:", targets.get_device())
-        # targets dim (target_seq_len, 1)
-        targets = torch.cat((start_token, targets))
-        for i, target in enumerate(targets[:-1]):
-            # target dim (1)
-            # input dim  (1, hidden_size)
+        start_token = torch.full(size=(self.batch_size,1), fill_value=self.vocab[self.SOS_STR], device=self.device)
+        # targets dim before (batch_size, target_seq_len)
+        # targets dim after (batch_size, target_seq_len + 1)
+        targets = torch.cat((start_token, targets), dim=1)
+        # loop through each index in the targets (all the batch targets together), except the last one
+        for i, target in enumerate(torch.transpose(targets, 0, 1)[:-1]):
+            # target dim (batch_size)
+            # input dim  (batch_size, hidden_size)
             input = self.embedding(target)
             # use the output of the model rather then the target as input only for evaluation
             if evaluation_mode and i > 0:
                 input = self.embedding(torch.tensor(torch.argmax(output, dim=1)))
 
             h = self.gru_cell(input, h)
-            # h dim (1,hidden_size)
+            # h dim (batch_size, hidden_size))
             output = self.W_s(h)
-            # output dim (1,output_size)
+            # output dim (batch_size,output_size)
             outputs.append(output)
-        # outputs dim (seq_len, output_size)
-        outputs = torch.vstack(outputs)
+        # outputs dim (batch_size, seq_len, output_size)
+        outputs = torch.stack(outputs, dim=1)
         ### --------------
         return outputs
 
@@ -139,7 +142,7 @@ class EncoderDecoder(BaseModel):
     Seq2Seq basic.
     """
 
-    def __init__(self, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, vocab, device):
+    def __init__(self, batch_size, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, vocab, device):
         """
         :param enc_input_size: The dimension of the input embeddings for the encoder.
         :param dec_input_size: The dimension of the input embeddings for the decoder.
@@ -150,6 +153,7 @@ class EncoderDecoder(BaseModel):
         """
         super().__init__(device)
 
+        self.batch_size = batch_size
         self.enc_input_size = enc_input_size
         self.dec_input_size = dec_input_size
         self.enc_hidden_size = enc_hidden_size
@@ -159,8 +163,8 @@ class EncoderDecoder(BaseModel):
         self.output_size = len(self.vocab)
         self.SOS_STR = '<sos>'
         self.EOS_STR = '<eos>'
-        self.encoder = EncoderRNN(self.enc_input_size, self.enc_hidden_size, self.vocab, self.device)
-        self.decoder = DecoderSimple(self.enc_input_size, self.enc_hidden_size, self.dec_hidden_size, self.vocab,
+        self.encoder = EncoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.vocab, self.device)
+        self.decoder = DecoderSimple(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.dec_hidden_size, self.vocab,
                                      self.SOS_STR, self.EOS_STR, self.device)
 
     def forward(self, input_tensor, target_tensor, evaluation_mode=False, **kwargs):

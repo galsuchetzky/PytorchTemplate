@@ -70,7 +70,7 @@ def batch_to_tensor(vocab, batch, pad_max_length, device):
     In the mask, 1 means original text and 0 means padding.
     :param vocab: The vocabulary from which to take the indices.
     :param batch: The batch to convert.
-    :return: The index tensor.
+    :return: out_tensor, out_mask of dim: (batch_size, pad_max_length)
     """
     # TODO Make the computation parallel.
     out_tensor = []
