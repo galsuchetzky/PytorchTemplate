@@ -66,7 +66,7 @@ class EncoderRNN(BaseModel):
         """
         :return: The initial hidden state of the encoder.
         """
-        return torch.zeros(1, 1, self.hidden_size)
+        return torch.zeros(1, 64, self.hidden_size)
 
 
 class DecoderSimple(BaseModel):
@@ -146,6 +146,7 @@ class EncoderDecoder(BaseModel):
         :param enc_hidden_size: The size of the encoder hidden state.
         :param dec_hidden_size: The size of the decoder hidden state.
         :param vocab: The vocabulary of the input and output.
+        :param device: The device to use for the model.
         """
         super().__init__(device)
 

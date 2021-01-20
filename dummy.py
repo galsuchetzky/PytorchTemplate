@@ -27,14 +27,14 @@
 #     print(a, logical['train'][777][a])
 # print('question_text', qdmr_lexicon['train'][lex_train[777]]['source'])
 
-from data_loader.data_loaders import BREAKDataLoader
-import re
-break_dataset = BREAKDataLoader('data/', 128, True, 0.1, 2)
+# from data_loader.data_loaders import BREAKDataLoader
+# import re
+# break_dataset = BREAKDataLoader('data/', 128, True, 0.1, 2)
 # validation_split = break_dataset.split_validation()
 
-random_example = break_dataset.dataset.get_example()
+# random_example = break_dataset.dataset.get_example()
 
-break_dataset.dataset.visualize(*random_example)
+# break_dataset.dataset.visualize(*random_example)
 # print(re.sub(r'#(\d+)', r'@@\1@@', random_example[1]))
 # print(sorted(list(set([tok.strip() for tok in random_example[2]]))))
 #
@@ -93,3 +93,46 @@ break_dataset.dataset.visualize(*random_example)
 # logger.warning('warn message')
 # logger.error('error message')
 # logger.critical('critical message')
+
+from torchtext.data.utils import get_tokenizer
+from data_loader.data_loaders import BREAKDataLoader
+from data_loader import BREAKLogical
+print("starting")
+en_tokenizer = get_tokenizer('spacy', language='en_core_web_sm')
+# break_dataloader = BREAKDataLoader('data/', 1, True, 0, 1)
+training = BREAKLogical('data/', train=True, valid=False)
+validation = BREAKLogical('data/', train=True, valid=True)
+testing = BREAKLogical('data/', train=False, valid=False)
+max_len = 0
+idx = 0
+# enumerate(break_dataloader)
+# for data, target in list(training) + list(validation) + list(testing):
+#     # print(data)
+#     max_len = max(max_len, len(en_tokenizer(target)))
+#     idx += 1
+#     if idx % 100 == 0:
+#         print("done", idx)
+#
+# print(max_len)
+# print("Done")
+from data_loader import batch_to_tensor, BREAK_vocab_simple, en_tokenizer
+vocab = BREAK_vocab_simple()
+
+data1, tar1 = training[3]
+data2, tar2 = training[5]
+data_pad_length = 64
+target_pad_length = 256
+print(data1)
+print(data2)
+batch_data = [data1, data2]
+batch_target = [tar1, tar2]
+padded_data, masks_data = batch_to_tensor(vocab, batch_data, data_pad_length, 'cpu')
+padded_target, masks_target = batch_to_tensor(vocab, batch_target, target_pad_length, 'cpu')
+print("padded data shape", padded_data.shape)
+print("data masks shape", masks_data.shape)
+
+print("tar1 len before pad", len(en_tokenizer(tar1)))
+
+print("padded target shape", padded_target.shape)
+print("target masks shape", masks_target.shape)
+print("tar1 interesting", masks_target[0].sum())

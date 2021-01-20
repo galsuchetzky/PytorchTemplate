@@ -50,8 +50,8 @@ class BREAKLogical(data.Dataset):
 
         # Prepare the questions and golds lists.
         # TODO remove the list slice, it is for debugging.
-        self.questions = self.dataset_logical[self.dataset_type]['question_text'][:200]
-        self.golds = self.dataset_logical[self.dataset_type]['decomposition'][:200]
+        self.questions = self.dataset_logical[self.dataset_type]['question_text']#[:200]
+        self.golds = self.dataset_logical[self.dataset_type]['decomposition']#[:200]
         # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
         self.golds = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.golds]
 
@@ -143,10 +143,11 @@ class BREAKLogical(data.Dataset):
         self.logger.info("loading lexicon")
         data = load_obj(dir_path, file_name)
         self.logger.info("lexicon loaded")
-        # TODO what is this?? it's superrrrr slow
-        for type in data:
-            for ex in data[type]:
-                data[type][ex] = ast.literal_eval(data[type][ex])
+        # TODO what is this?? it's superrrrr slow optimize or save to the file on lex creation.
+        # TODO uncomment this
+        # for type in data:
+        #     for ex in data[type]:
+        #         data[type][ex] = ast.literal_eval(data[type][ex])
         self.logger.info("done literal eval")
         return data
 

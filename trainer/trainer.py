@@ -134,6 +134,8 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         self.device = device
         self.vocab = ConfigParser.init_obj_recursive(self.config['trainer'], 'vocab')
         self.data_loader = data_loader
+        self.question_pad_length = config['data_loader']['question_pad_length']
+        self.qdmr_pad_length = config['data_loader']['qdmr_pad_length']
 
         if len_epoch is None:
             # epoch-based training
@@ -163,8 +165,8 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         self.train_metrics.reset()
         with tqdm(total=self.data_loader.n_samples) as progbar:
             for batch_idx, (data, target) in enumerate(self.data_loader):
-                data = batch_to_tensor(self.vocab, data).to(self.device)
-                target = batch_to_tensor(self.vocab, target).to(self.device)
+                data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
+                target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
                 # Run the model on the batch
                 self.optimizer.zero_grad()
                 output = self.model(data, target)
@@ -227,8 +229,8 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
 
         with torch.no_grad():
             for batch_idx, (data, target) in enumerate(self.valid_data_loader):
-                data = batch_to_tensor(self.vocab, data).to(self.device)
-                target = batch_to_tensor(self.vocab, target).to(self.device)
+                data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
+                target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
 
                 # Run the model on the batch and calculate the loss
                 output = self.model(data, target, evaluation_mode=True)

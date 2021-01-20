@@ -18,7 +18,7 @@ def BREAK_vocab_simple():
     :return: The vocab.
     """
     # Special characters to include in the vocabulary.
-    specials = ['<unk>', '<sos>', '<eos>', '@@10@@', '@@11@@', '@@12@@', '@@13@@',
+    specials = ['<unk>', '<sos>', '<pad>', '<eos>', '@@10@@', '@@11@@', '@@12@@', '@@13@@',
                 '@@14@@', '@@15@@', '@@16@@', '@@17@@', '@@18@@', '@@19@@', '@@1@@',
                 '@@2@@', '@@3@@', '@@4@@', '@@5@@', '@@6@@', '@@7@@', '@@8@@', '@@9@@']
 
@@ -64,22 +64,41 @@ def load_vocab(dir_path, file_name):
     return vocab
 
 
-def batch_to_tensor(vocab, batch):
+def batch_to_tensor(vocab, batch, pad_max_length, device):
     """
     Converts a batch of questions to a tensor of indices from the vocab.
+    In the mask, 1 means original text and 0 means padding.
     :param vocab: The vocabulary from which to take the indices.
     :param batch: The batch to convert.
     :return: The index tensor.
     """
-    # TODO change it to pad the outputs to a max length and hstack them to a 2d tensor.
-    #  Make the computation parallel.
+    # TODO Make the computation parallel.
     out_tensor = []
-    for question in batch:
-        out_tensor.append(torch.tensor([vocab[token] for token in en_tokenizer(question)],
-                                       dtype=torch.long).unsqueeze(1))
+    out_mask = []
+    for data in batch:
+        # Tokenize
+        tokenized_data = en_tokenizer(data)
 
-    out_tensor = torch.vstack(out_tensor)
-    return out_tensor
+        # Pad and create a mask
+        padded = ['<pad>'] * pad_max_length
+        mask = [0] * pad_max_length
+        data_len = min(len(tokenized_data), pad_max_length)
+
+        padded[:data_len] = tokenized_data[:data_len]
+        mask[:data_len] = [1] * data_len
+
+        tensor = torch.tensor([vocab[token] for token in padded], dtype=torch.long)
+        mask = torch.tensor(mask, dtype=torch.long)
+
+        # Add to list
+        out_tensor.append(tensor)
+        out_mask.append(mask)
+
+    # Stack
+    out_tensor = torch.stack(out_tensor).to(device)
+    out_mask = torch.stack(out_mask).to(device)
+
+    return out_tensor, out_mask
 
 
 def tensor_to_str(vocab, tensor):
