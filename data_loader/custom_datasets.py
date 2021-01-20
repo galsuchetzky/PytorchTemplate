@@ -149,3 +149,13 @@ class BREAKLogical(data.Dataset):
                 data[type][ex] = ast.literal_eval(data[type][ex])
         self.logger.info("done literal eval")
         return data
+
+    @staticmethod
+    def visualize(question, gold):
+        """
+        Visualized a question and it's qdmr.
+        :param question: The question to visualize.
+        :param gold: The corresponding qdmr.
+        """
+        print("Question:\n", question)
+        print("QDMR:\n", gold.replace(";", ";\n"))
