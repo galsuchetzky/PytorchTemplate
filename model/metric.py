@@ -28,7 +28,7 @@ def accuracy_qdmr(pred, target):
     #  Maybe take from the break original code.
     with torch.no_grad():
         assert pred.shape == target.shape
-        correct = torch.sum(torch.all(torch.eq(pred, target),dim=1))
+        correct = torch.sum(torch.all(torch.eq(pred, target),dim=1)).item()
 
     return correct / len(target)
 

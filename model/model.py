@@ -119,6 +119,7 @@ class DecoderSimple(BaseModel):
         # targets dim after (batch_size, target_seq_len + 1)
         targets = torch.cat((start_token, targets), dim=1)
         # loop through each index in the targets (all the batch targets together), except the last one
+        # TODO in eval mode need to loop until EOS token reached
         for i, target in enumerate(torch.transpose(targets, 0, 1)[:-1]):
             # target dim (batch_size)
             # input dim  (batch_size, hidden_size)

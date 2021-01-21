@@ -38,7 +38,8 @@ class BREAKDataLoader(BaseDataLoader):
         self.data_dir = data_dir
         self.dataset = custom_datasets.BREAKLogical(self.data_dir, train=training, valid=False)
         self.validation_split = 0.0  # make sure to use all data
-        super().__init__(self.dataset, batch_size, shuffle, self.validation_split, num_workers)
+        self.drop_last = True
+        super().__init__(self.dataset, batch_size, shuffle, self.validation_split, num_workers, drop_last=self.drop_last)
 
     def split_validation(self):
         """
@@ -57,4 +58,5 @@ class BREAKDataLoaderValid(BaseDataLoader):
     def __init__(self, data_dir, batch_size, shuffle=True, validation_split=0.0, num_workers=1, training=True):
         self.data_dir = data_dir
         self.dataset = custom_datasets.BREAKLogical(self.data_dir, train=training, valid=True)
-        super().__init__(self.dataset, batch_size, shuffle, validation_split, num_workers)
+        self.drop_last = True
+        super().__init__(self.dataset, batch_size, shuffle, validation_split, num_workers, drop_last=self.drop_last)

@@ -13,7 +13,8 @@ class BaseDataLoader(DataLoader):
     Base class for all data loaders
     """
 
-    def __init__(self, dataset, batch_size, shuffle, validation_split, num_workers, collate_fn=default_collate):
+    def __init__(self, dataset, batch_size, shuffle, validation_split, num_workers, collate_fn=default_collate,
+                 drop_last=True):
         """
         Initiates the DataLoader with the given parameters and initiates the super class.
         :param dataset (Dataset): dataset from which to load the data.
@@ -38,6 +39,7 @@ class BaseDataLoader(DataLoader):
 
         # Define samplers for the training split and the validation split.
         self.sampler, self.valid_sampler = self._split_sampler(self.validation_split)
+        self.drop_last = drop_last
 
         # Define arguments to initiate the superclass.
         self.init_kwargs = {
@@ -45,7 +47,8 @@ class BaseDataLoader(DataLoader):
             'batch_size': batch_size,
             'shuffle': self.shuffle,
             'collate_fn': collate_fn,
-            'num_workers': num_workers
+            'num_workers': num_workers,
+            'drop_last': self.drop_last
         }
         super().__init__(sampler=self.sampler, **self.init_kwargs)
 

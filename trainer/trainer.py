@@ -194,6 +194,7 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
                 output = torch.transpose(output, 1, 2)
 
                 # Calculate the loss and perform optimization step.
+                # TODO test properly use of masks
                 loss = self.criterion(output, target)
                 loss.backward()
                 self.optimizer.step()
@@ -228,7 +229,6 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         log = self.train_metrics.result()
 
         # If validation split exists, evaluate on validation set as well.
-        raise NotImplementedError
         if self.do_validation:
             val_log = self._valid_epoch(epoch)
             log.update(**{'val_' + k: round(v, 5) for k, v in val_log.items()})
@@ -251,13 +251,13 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
 
         with torch.no_grad():
             for batch_idx, (data, target) in enumerate(self.valid_data_loader):
-                data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
-                target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
+                data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
+                target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
 
                 # Run the model on the batch and calculate the loss
                 output = self.model(data, target, evaluation_mode=True)
+                output = torch.transpose(output, 1, 2)
                 pred = torch.argmax(output, dim=1)
-                target = target.view(-1)
                 loss = self.criterion(output, target)
 
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')

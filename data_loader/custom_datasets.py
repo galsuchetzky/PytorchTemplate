@@ -50,8 +50,8 @@ class BREAKLogical(data.Dataset):
 
         # Prepare the questions and golds lists.
         # TODO remove the list slice, it is for debugging.
-        self.questions = self.dataset_logical[self.dataset_type]['question_text'][:200]
-        self.golds = self.dataset_logical[self.dataset_type]['decomposition'][:200]
+        self.questions = self.dataset_logical[self.dataset_type]['question_text'][:100]
+        self.golds = self.dataset_logical[self.dataset_type]['decomposition'][:100]
         # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
         self.golds = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.golds]
 
