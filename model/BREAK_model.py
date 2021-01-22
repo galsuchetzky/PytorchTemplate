@@ -1,29 +1,11 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from base import BaseModel
 
+
 # TODO add documentation and shapes everywhere.
-
-class MnistModel(BaseModel):
-    def __init__(self, device, num_classes=10):
-        super().__init__(device)
-        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
-        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
-        self.conv2_drop = nn.Dropout2d()
-        self.fc1 = nn.Linear(320, 50)
-        self.fc2 = nn.Linear(50, num_classes)
-
-    def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
-        x = x.view(-1, 320)
-        x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
-        x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
-
+# TODO remove the "your code here" from the models. give credits in a docstring above to the course.
 
 class EncoderRNN(BaseModel):
     """
@@ -114,7 +96,7 @@ class DecoderSimple(BaseModel):
         h = self.W_p(h).squeeze(0)  # Project the last hidden state of the encoder to the input size of the decoder.
         # start_token = torch.tensor(self.vocab[self.SOS_STR], device=self.device).view(1, -1)
 
-        start_token = torch.full(size=(self.batch_size,1), fill_value=self.vocab[self.SOS_STR], device=self.device)
+        start_token = torch.full(size=(self.batch_size, 1), fill_value=self.vocab[self.SOS_STR], device=self.device)
         # targets dim before (batch_size, target_seq_len)
         # targets dim after (batch_size, target_seq_len + 1)
         targets = torch.cat((start_token, targets), dim=1)
@@ -166,7 +148,8 @@ class EncoderDecoder(BaseModel):
         self.SOS_STR = '<sos>'
         self.EOS_STR = '<eos>'
         self.encoder = EncoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.vocab, self.device)
-        self.decoder = DecoderSimple(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.dec_hidden_size, self.vocab,
+        self.decoder = DecoderSimple(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.dec_hidden_size,
+                                     self.vocab,
                                      self.SOS_STR, self.EOS_STR, self.device)
 
     def forward(self, input_tensor, target_tensor, evaluation_mode=False, **kwargs):

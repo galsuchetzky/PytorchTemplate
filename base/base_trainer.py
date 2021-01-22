@@ -12,23 +12,32 @@ class BaseTrainer:
     Base class for all trainers.
     Handles the training loop, logging, saving checkpoints, timings and presenting the training results.
     """
-    #TODO add device, data_loader as other params that are in children. from run
-    def __init__(self, model, criterion, metric_fns, optimizer, config):
+
+    def __init__(self, model, criterion, metric_ftns, optimizer, config, device, data_loader, valid_data_loader, \
+                 lr_scheduler):
         """
         Initiates the Base trainer.
-        :param model:       The model to train.
-        :param criterion:   The loss function.
-        :param metric_fns: The metrics on which the model will be evaluated during evaluation or train time.
-        :param optimizer:   The optimizer to use for optimizing the parameters of the model.
-        :param config:      Configuration file.
+        :param model:               The model to train.
+        :param criterion:           The loss function.
+        :param metric_ftns:          The metrics on which the model will be evaluated during evaluation or train time.
+        :param optimizer:           The optimizer to use for optimizing the parameters of the model.
+        :param config:              Configuration file.
+        :param device:              The device to use for computations.
+        :param data_loader:         Dataloader for the train dataset.
+        :param valid_data_loader:   Dataloader for the validation dataset.
+        :param lr_scheduler:        Scheduler for the learning rate.
         """
         self.config = config
         self.logger = config.get_logger('trainer', config['trainer']['verbosity'])
 
         self.model = model
         self.criterion = criterion
-        self.metric_fns = metric_fns
+        self.metric_ftns = metric_ftns
         self.optimizer = optimizer
+        self.device = device
+        self.data_loader = data_loader
+        self.valid_data_loader = valid_data_loader
+        self.lr_scheduler = lr_scheduler
 
         # Get training configurations
         cfg_trainer = config['trainer']
@@ -77,15 +86,6 @@ class BaseTrainer:
         :param epoch: Current epoch number.
         """
         raise NotImplementedError
-
-    # @abstractmethod
-    # def _valid_epoch(self, epoch):
-    #     """
-    #     Evaluation logic for an epoch.
-    #
-    #     :param epoch: Current epoch number.
-    #     """
-    #     raise NotImplementedError
 
     def train(self):
         """

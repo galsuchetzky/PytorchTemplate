@@ -1,8 +1,7 @@
 import torch
 import model.loss as module_loss
 import model.metric as module_metric
-import trainer.trainer as trainer_module
-import tester.tester as tester_module
+from importlib import import_module
 
 from utils import prepare_device
 
@@ -11,7 +10,7 @@ def run(config, train=True):
     """
     :param config:
     :param train:
-    :return:
+    :return: TODO document
     """
     logger = config.get_logger('train' if train else 'test')
 
@@ -38,7 +37,7 @@ def run(config, train=True):
     criterion = getattr(module_loss, config['loss'])()
     metric_fns = [getattr(module_metric, met) for met in config['metrics']]
 
-    if train:
+    if train:  # Run trainer.
         valid_data_loader = data_loader.split_validation()
 
         # build optimizer, learning rate scheduler. delete every lines containing lr_scheduler for disabling scheduler
@@ -47,6 +46,7 @@ def run(config, train=True):
         lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
 
         cfg_trainer = config['trainer']
+        trainer_module = import_module(cfg_trainer['module'])
         trainer_class = getattr(trainer_module, cfg_trainer['type'])
 
         trainer = trainer_class(model, criterion, metric_fns, optimizer,
@@ -57,7 +57,7 @@ def run(config, train=True):
                                 lr_scheduler=lr_scheduler)
 
         trainer.train()
-    else:
+    else:  # Run tester.
         logger.info('Loading checkpoint: {} ...'.format(config.resume))
         checkpoint = torch.load(config.resume)
         state_dict = checkpoint['state_dict']
@@ -66,6 +66,7 @@ def run(config, train=True):
         logger.info("Checkpoint loaded.")
 
         cfg_tester = config['tester']
+        tester_module = import_module(cfg_tester['module'])
         tester_class = getattr(tester_module, cfg_tester['type'])
 
         tester = tester_class(model, criterion, metric_fns,
@@ -73,4 +74,3 @@ def run(config, train=True):
                               device=device,
                               data_loader=data_loader, evaluation=False)
         tester.test()
-

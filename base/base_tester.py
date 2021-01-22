@@ -2,9 +2,8 @@ import torch
 import time
 
 from abc import abstractmethod
-from numpy import inf
 from logger import TensorboardWriter
-from utils import time_elapsed, time_remaining
+from utils import time_elapsed
 
 
 class BaseTester:
@@ -20,7 +19,9 @@ class BaseTester:
         :param criterion:   The loss function.
         :param metric_ftns: The metrics on which the model will be evaluated during test time.
         :param config:      Configuration file.
-        :param TODO
+        :param device:      The device to use for the computations.
+        :param data_loader: Dataloader for the dataset.
+        :param evaluation:  True if the tester is used as evaluator while training, False if used for testing the model.
         """
         self.config = config
         self.logger = config.get_logger('tester', config['tester']['verbosity'])
@@ -70,7 +71,6 @@ class BaseTester:
             log.update(result)
 
             # When testing, print test results.
-            # TODO check why test loss =0.0
             if not self.evaluation:
                 self.logger.info('Testing Finished.')
                 self.logger.info('------------ Test Result ------------')

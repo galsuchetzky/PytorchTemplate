@@ -1,1 +1,2 @@
-from .trainer import *
+from .MNIST_trainer import *
+from .BREAK_trainer import *

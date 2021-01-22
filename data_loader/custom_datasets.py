@@ -138,21 +138,19 @@ class BREAKLogical(data.Dataset):
 
     def get_lexicon(self):
         # TODO add documentation
-        self.logger.info("Preparing lexicon")
+        self.logger.info("Preparing lexicon...")
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "lexicon_by_logical"
         file_name = "lexicon.pkl"
         if not (dir_path / file_name).is_file():
             self.create_matching_lexicon(dir_path, file_name)
-        self.logger.info("loading lexicon")
         data = load_obj(dir_path, file_name)
-        self.logger.info("lexicon loaded")
-        # TODO what is this?? it's superrrrr slow optimize or save to the file on lex creation.
+        # TODO these lines turn the string repr of lists to real lists, but slow. save to file or something.
         # TODO uncomment this
         # for type in data:
         #     for ex in data[type]:
         #         data[type][ex] = ast.literal_eval(data[type][ex])
-        self.logger.info("done literal eval")
+        self.logger.info("Lexicon ready.")
         return data
 
     @staticmethod

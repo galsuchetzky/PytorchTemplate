@@ -2,10 +2,10 @@
     "name": "SimpleRNN_Encoder_Decoder",
     "n_gpu": 1,
     "arch": {
-        "module": "model.model",
+        "module": "model.BREAK_model",
         "type": "EncoderDecoder",
         "args": {
-            "batch_size": 32,
+            "batch_size": "constants.batch_size",
             "enc_input_size": 256,
             "dec_input_size": 256,
             "enc_hidden_size": 256,
@@ -18,11 +18,11 @@
         }
     },
     "data_loader": {
-        "module": "data_loader.data_loaders",
+        "module": "data_loader.BREAK_data_loader",
         "type": "BREAKDataLoader",
         "args": {
             "data_dir": "data/",
-            "batch_size": 32,
+            "batch_size": "constants.batch_size",
             "shuffle": true,
             "validation_split": 0,
             "num_workers": 2
@@ -50,6 +50,7 @@
         }
     },
     "trainer": {
+        "module" : "trainer.BREAK_trainer",
         "type": "Seq2SeqSimpleTrainer",
         "epochs": 4,
         "save_dir": "saved/",
@@ -61,9 +62,13 @@
         "best_metrics_log": "epoch loss accuracy_qdmr val_loss val_accuracy_qdmr"
     },
     "tester": {
+        "module" : "tester.BREAK_tester",
         "type": "Seq2SeqSimpleTester",
         "verbosity": 1,
         "metrics_log": "loss accuracy_qdmr",
         "tensorboard": true
+    },
+    "constants" : {
+        "batch_size": 32
     }
 }

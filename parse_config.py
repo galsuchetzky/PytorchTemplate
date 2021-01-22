@@ -56,7 +56,7 @@ class ConfigParser:
         Initialize this class from some cli arguments. Used in train, test.
         :param args: Arguments from which to initialize the configuration.
         :param options: additional options to add to the config.
-        :return:
+        :return: ConfigParser object configured with the arguments.
         """
 
         # Update the arguments with the options.
@@ -80,6 +80,7 @@ class ConfigParser:
             cfg_fname = Path(args.config)
 
         config = read_json(cfg_fname)
+        ConfigParser.resolve_constants(config)
         if args.config and resume:
             # update new config for fine-tuning
             config.update(read_json(args.config))
@@ -87,6 +88,28 @@ class ConfigParser:
         # parse custom cli options into dictionary
         modification = {opt.target: getattr(args, _get_opt_name(opt.flags)) for opt in options}
         return cls(config, resume, modification)
+
+    @classmethod
+    def resolve_constants(cls, config, constants=None):
+        """
+        Resolves all the json constants.
+        :param config: The configuration file or a sub part of it (this function is recursive).
+        :param constants: The constants to use for resolving.
+        """
+        # If in the upper layer or constants are configured in the subpart.
+        if 'constants' in config:
+            constants = config['constants']
+
+        # If no constants are configured, return.
+        if not constants:
+            return
+
+        # Resolve the constants.
+        for key in config:
+            if isinstance(config[key], str) and config[key].startswith('constants.'):
+                config[key] = constants[key.replace('constants.', '')]
+            elif isinstance(config[key], dict):
+                ConfigParser.resolve_constants(config[key], constants)
 
     def init_obj(self, name, module=None, *args, **kwargs):
         """

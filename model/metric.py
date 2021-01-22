@@ -1,6 +1,7 @@
 import torch
 
 
+# TODO bring all the metrics from the BREAK repo.
 def accuracy_MNIST(output, target):
     """
     Tests the accuracy of the prediction to the target.
@@ -28,7 +29,7 @@ def accuracy_qdmr(pred, target):
     #  Maybe take from the break original code.
     with torch.no_grad():
         assert pred.shape == target.shape
-        correct = torch.sum(torch.all(torch.eq(pred, target),dim=1)).item()
+        correct = torch.sum(torch.all(torch.eq(pred, target), dim=1)).item()
 
     return correct / len(target)
 

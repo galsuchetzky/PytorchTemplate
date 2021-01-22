@@ -18,6 +18,7 @@ def BREAK_vocab_simple():
     :return: The vocab.
     """
     # Special characters to include in the vocabulary.
+    # TODO move the special tokens (unk, pad ...) to constants out of here.
     specials = ['<unk>', '<sos>', '<pad>', '<eos>', '@@10@@', '@@11@@', '@@12@@', '@@13@@',
                 '@@14@@', '@@15@@', '@@16@@', '@@17@@', '@@18@@', '@@19@@', '@@1@@',
                 '@@2@@', '@@3@@', '@@4@@', '@@5@@', '@@6@@', '@@7@@', '@@8@@', '@@9@@']
