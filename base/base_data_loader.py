@@ -86,7 +86,6 @@ class BaseDataLoader(DataLoader):
         # Split the shuffled indices to validation and training indices.
         valid_idx = idx_full[0:len_valid]
         train_idx = np.delete(idx_full, np.arange(0, len_valid))
-
         # Define samplers for train and validation.
         train_sampler = SubsetRandomSampler(train_idx)
         valid_sampler = SubsetRandomSampler(valid_idx)
@@ -107,4 +106,9 @@ class BaseDataLoader(DataLoader):
         if self.valid_sampler is None:
             return None
         else:
-            return DataLoader(sampler=self.valid_sampler, **self.init_kwargs)
+            dataloader = DataLoader(sampler=self.valid_sampler, **self.init_kwargs)
+            # TODO for some reason the MNIST dataloader only loads 235 samples (or less) instead of the real needed
+            #  amount.
+            print(len(dataloader))
+            print(len(self.valid_sampler))
+            return dataloader

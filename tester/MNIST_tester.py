@@ -46,7 +46,7 @@ class MNISTTester(BaseTester):
         for i, (data, target) in enumerate(tqdm(self.data_loader)):
             data, target = data.to(self.device), target.to(self.device)
             output = self.model(data)
-
+            print(len(self.data_loader))
             # computing loss, metrics on test set
             loss = self.criterion(output, target)
             batch_size = data.shape[0]

@@ -11,19 +11,21 @@ from pathlib import Path
 from utils import save_obj, load_obj
 from subprocess import run
 
+DEBUG_EXAMPLES_AMOUNT = 300
 
 class BREAKLogical(data.Dataset):
     """
     The Break dataset: https://github.com/allenai/Break.
     """
 
-    def __init__(self, data_dir, train=True, valid=False):
+    def __init__(self, data_dir, train=True, valid=False, debug=False):
         """
         Initiates the Bread dataset.
         :param data_dir (str):  Path to the data in which to save/ from which to read the dataset.
         :param train:           True to load the train data, False to load the test data.
         :param valid:           If train is False, ignored. If train is True, then valid=True will load the validation
                                 data and valid=False will load the train data.
+        :param debug:           True for using a small subset of the dataset.
         """
         # Define logger
         if not LOGGER_SETUP:
@@ -50,9 +52,15 @@ class BREAKLogical(data.Dataset):
             run(['python', '-m', 'spacy', 'download', 'en'])
 
         # Prepare the questions and golds lists.
-        # TODO remove the list slice, it is for debugging.
-        self.questions = self.dataset_logical[self.dataset_type]['question_text']#[:100]
-        self.golds = self.dataset_logical[self.dataset_type]['decomposition']#[:100]
+        self.questions = self.dataset_logical[self.dataset_type]['question_text']
+        self.golds = self.dataset_logical[self.dataset_type]['decomposition']
+        if debug:
+            self.questions = self.questions[:DEBUG_EXAMPLES_AMOUNT]
+            self.golds = self.golds[:DEBUG_EXAMPLES_AMOUNT]
+            print('len of questions:', len(self.questions))
+            print('len of golds:', len(self.golds))
+
+
         # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
         self.golds = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.golds]
 

@@ -14,10 +14,16 @@ class MNISTTrainer(BaseTrainer):
 
     def __init__(self, model, criterion, metric_fns, optimizer, config, device,
                  data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
-        super().__init__(model, criterion, metric_fns, optimizer, config)
-        self.config = config
-        self.device = device
-        self.data_loader = data_loader
+        super().__init__(model,
+                         criterion,
+                         metric_fns,
+                         optimizer,
+                         config,
+                         device,
+                         data_loader,
+                         valid_data_loader,
+                         lr_scheduler)
+
         if len_epoch is None:
             # epoch-based training
             self.len_epoch = len(self.data_loader)
@@ -25,17 +31,14 @@ class MNISTTrainer(BaseTrainer):
             # iteration-based training
             self.data_loader = inf_loop(data_loader)
             self.len_epoch = len_epoch
-        self.valid_data_loader = valid_data_loader
         self.do_validation = self.valid_data_loader is not None
-        self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
 
-        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_fns], writer=self.writer)
-        # self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_fns], writer=self.writer)
+        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
         # Define evaluator.
         self.evaluator = MNISTTester(self.model,
                                      self.criterion,
-                                     self.metric_fns,
+                                     self.metric_ftns,
                                      self.config,
                                      self.device,
                                      self.valid_data_loader)
@@ -62,7 +65,7 @@ class MNISTTrainer(BaseTrainer):
 
                 self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
                 self.train_metrics.update('loss', loss.item())
-                for met in self.metric_fns:
+                for met in self.metric_ftns:
                     self.train_metrics.update(met.__name__, met(output, target))
 
                 if batch_idx % self.log_step == 0:

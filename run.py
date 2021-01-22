@@ -14,6 +14,9 @@ def run(config, train=True):
     """
     logger = config.get_logger('train' if train else 'test')
 
+    # Add the debug argument to the dataloader arguments.
+    config['data_loader']['args']['debug'] = config['debug']
+
     # setup data_loader instances
     if not train:
         config['data_loader']['args']['training'] = False

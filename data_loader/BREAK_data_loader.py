@@ -7,7 +7,8 @@ class BREAKDataLoader(BaseDataLoader):
     Class for loading the Break dataset (logical-forms).
     """
 
-    def __init__(self, data_dir, batch_size, shuffle=True, validation_split=0.0, num_workers=1, training=True):
+    def __init__(self, data_dir, batch_size, shuffle=True, validation_split=0.0, num_workers=1, training=True,
+                 debug=False):
         """
         Initiates the Break dataset loader and the superclass.
         :param data_dir (str): Path to the data in which to save/ from which to read the dataset.
@@ -17,9 +18,10 @@ class BREAKDataLoader(BaseDataLoader):
                                                 If float, treats as percent of validation examples.
         :param num_workers (int): how many subprocesses to use for data loading.
         :param training: True for loading the training split, False for loading the testing split.
+        :param debug: True for running with a small subset of the dataset.
         """
         self.data_dir = data_dir
-        self.dataset = custom_datasets.BREAKLogical(self.data_dir, train=training, valid=False)
+        self.dataset = custom_datasets.BREAKLogical(self.data_dir, train=training, valid=False, debug=debug)
         self.dataset_type = self.dataset.get_dataset_type()
         self.validation_split = 0.0  # make sure to use all data
         self.drop_last = True

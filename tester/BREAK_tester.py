@@ -1,4 +1,5 @@
 import torch
+from tqdm import tqdm
 
 from base import BaseTester
 from utils import MetricTracker
@@ -47,8 +48,8 @@ class Seq2SeqSimpleTester(BaseTester):
         """
         # Sets the model to evaluation mode.
         self.valid_metrics.reset()
-
-        for batch_idx, (data, target) in enumerate(self.data_loader):
+        print("dataloader len is", len(self.data_loader)) # TODO for debug should be 300, yet it is 241 for some reason.
+        for batch_idx, (data, target) in enumerate(tqdm(self.data_loader)):
             data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
             target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
 
