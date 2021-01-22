@@ -5,7 +5,7 @@
     "arch": {
         "type": "EncoderDecoder",
         "args": {
-            "batch_size": 8,
+            "batch_size": 32,
             "enc_input_size": 256,
             "dec_input_size": 256,
             "enc_hidden_size": 256,
@@ -22,7 +22,7 @@
         "type": "BREAKDataLoader",
         "args":{
             "data_dir": "data/",
-            "batch_size": 8,
+            "batch_size": 32,
             "shuffle": true,
             "validation_split": 0,
             "num_workers": 2
