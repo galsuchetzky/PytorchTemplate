@@ -51,7 +51,7 @@
     },
     "trainer": {
         "type": "Seq2SeqSimpleTrainer",
-        "epochs": 10,
+        "epochs": 4,
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 1,

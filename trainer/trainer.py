@@ -8,18 +8,18 @@ from utils import inf_loop, MetricTracker
 from tqdm import tqdm
 from data_loader import batch_to_tensor
 from torch.nn import CrossEntropyLoss
-from tester import Seq2SeqSimpleTester
+from tester import Seq2SeqSimpleTester, MNISTTester
 
 
 # TODO add documentation and complete implementation for the Seq2SeqSimpleTrainer
-class Trainer(BaseTrainer):
+class MNISTTrainer(BaseTrainer):
     """
     Trainer class
     """
 
-    def __init__(self, model, criterion, metric_ftns, optimizer, config, device,
+    def __init__(self, model, criterion, metric_fns, optimizer, config, device,
                  data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
-        super().__init__(model, criterion, metric_ftns, optimizer, config)
+        super().__init__(model, criterion, metric_fns, optimizer, config)
         self.config = config
         self.device = device
         self.data_loader = data_loader
@@ -35,9 +35,15 @@ class Trainer(BaseTrainer):
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
 
-        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
-        self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
-
+        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_fns], writer=self.writer)
+        # self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_fns], writer=self.writer)
+        # Define evaluator.
+        self.evaluator = MNISTTester(self.model,
+                                     self.criterion,
+                                     self.metric_fns,
+                                     self.config,
+                                     self.device,
+                                     self.valid_data_loader)
 
     def _train_epoch(self, epoch):
         """
@@ -61,7 +67,7 @@ class Trainer(BaseTrainer):
 
                 self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
                 self.train_metrics.update('loss', loss.item())
-                for met in self.metric_ftns:
+                for met in self.metric_fns:
                     self.train_metrics.update(met.__name__, met(output, target))
 
                 if batch_idx % self.log_step == 0:
@@ -79,7 +85,7 @@ class Trainer(BaseTrainer):
         log = self.train_metrics.result()
 
         if self.do_validation:
-            val_log = self._valid_epoch(epoch)
+            val_log = self.evaluator.test()
             log.update(**{'val_' + k: round(v, 5) for k, v in val_log.items()})
 
         if self.lr_scheduler is not None:
@@ -87,32 +93,32 @@ class Trainer(BaseTrainer):
 
         return log
 
-    def _valid_epoch(self, epoch):
-        """
-        Validate after training an epoch
-
-        :param epoch: Integer, current training epoch.
-        :return: A log that contains information about validation
-        """
-        self.model.eval()
-        self.valid_metrics.reset()
-        with torch.no_grad():
-            for batch_idx, (data, target) in enumerate(self.valid_data_loader):
-                data, target = data.to(self.device), target.to(self.device)
-
-                output = self.model(data)
-                loss = self.criterion(output, target)
-
-                self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
-                self.valid_metrics.update('loss', loss.item())
-                for met in self.metric_ftns:
-                    self.valid_metrics.update(met.__name__, met(output, target))
-                self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
-
-        # add histogram of model parameters to the tensorboard
-        for name, p in self.model.named_parameters():
-            self.writer.add_histogram(name, p, bins='auto')
-        return self.valid_metrics.result()
+    # def _valid_epoch(self, epoch):
+    #     """
+    #     Validate after training an epoch
+    #
+    #     :param epoch: Integer, current training epoch.
+    #     :return: A log that contains information about validation
+    #     """
+    #     self.model.eval()
+    #     self.valid_metrics.reset()
+    #     with torch.no_grad():
+    #         for batch_idx, (data, target) in enumerate(self.valid_data_loader):
+    #             data, target = data.to(self.device), target.to(self.device)
+    #
+    #             output = self.model(data)
+    #             loss = self.criterion(output, target)
+    #
+    #             self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
+    #             self.valid_metrics.update('loss', loss.item())
+    #             for met in self.metric_fns:
+    #                 self.valid_metrics.update(met.__name__, met(output, target))
+    #             self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+    #
+    #     # add histogram of model parameters to the tensorboard
+    #     for name, p in self.model.named_parameters():
+    #         self.writer.add_histogram(name, p, bins='auto')
+    #     return self.valid_metrics.result()
 
     def _progress(self, batch_idx):
         base = '[{}/{} ({:.0f}%)]'
@@ -130,13 +136,13 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
     Trainer for a simple seq2seq mode.
     """
 
-    def __init__(self, model, criterion, metric_ftns, optimizer, config, device,
+    def __init__(self, model, criterion, metric_fns, optimizer, config, device,
                  data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
         """
 
         :param model:
         :param criterion: we ignore this value and overwrite it
-        :param metric_ftns:
+        :param metric_fns:
         :param optimizer:
         :param config:
         :param device:
@@ -167,18 +173,19 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
 
-        super().__init__(model, self.criterion, metric_ftns, optimizer, config)
+        super().__init__(model, self.criterion, metric_fns, optimizer, config)
 
-        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
-        # self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_fns], writer=self.writer)
+        # self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_fns], writer=self.writer)
 
         # Define evaluator.
         self.evaluator = Seq2SeqSimpleTester(self.model,
                                              self.criterion,
-                                             self.metric_ftns,
+                                             self.metric_fns,
                                              self.config,
                                              self.device,
                                              self.valid_data_loader)
+
     def _train_epoch(self, epoch):
         """
         Training logic for an epoch.
@@ -212,7 +219,7 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
 
                 # Update metrics
                 self.train_metrics.update('loss', loss.item())
-                for met in self.metric_ftns:
+                for met in self.metric_fns:
                     with torch.no_grad():
                         pred = torch.argmax(output, dim=1)
                     self.train_metrics.update(met.__name__, met(pred, target))
@@ -273,7 +280,7 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
     #
     #             self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
     #             self.valid_metrics.update('loss', loss.item())
-    #             for met in self.metric_ftns:
+    #             for met in self.metric_fns:
     #                 self.valid_metrics.update(met.__name__, met(pred, target))
     #             # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
     #

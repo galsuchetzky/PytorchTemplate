@@ -36,7 +36,7 @@ def run(config, train=True):
 
     # get function handles of loss and metrics
     criterion = getattr(module_loss, config['loss'])()
-    metric_ftns = [getattr(module_metric, met) for met in config['metrics']]
+    metric_fns = [getattr(module_metric, met) for met in config['metrics']]
 
     if train:
         valid_data_loader = data_loader.split_validation()
@@ -49,7 +49,7 @@ def run(config, train=True):
         cfg_trainer = config['trainer']
         trainer_class = getattr(trainer_module, cfg_trainer['type'])
 
-        trainer = trainer_class(model, criterion, metric_ftns, optimizer,
+        trainer = trainer_class(model, criterion, metric_fns, optimizer,
                                 config=config,
                                 device=device,
                                 data_loader=data_loader,
@@ -68,7 +68,7 @@ def run(config, train=True):
         cfg_tester = config['tester']
         tester_class = getattr(tester_module, cfg_tester['type'])
 
-        tester = tester_class(model, criterion, metric_ftns,
+        tester = tester_class(model, criterion, metric_fns,
                               config=config,
                               device=device,
                               data_loader=data_loader, evaluation=False)

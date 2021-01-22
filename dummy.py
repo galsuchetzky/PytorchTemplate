@@ -96,13 +96,21 @@
 #
 # from torchtext.data.utils import get_tokenizer
 # from data_loader.data_loaders import BREAKDataLoader
-# from data_loader import BREAKLogical
+from data_loader import BREAKLogical
 # print("starting")
 # en_tokenizer = get_tokenizer('spacy', language='en_core_web_sm')
 # # break_dataloader = BREAKDataLoader('data/', 1, True, 0, 1)
 # training = BREAKLogical('data/', train=True, valid=False)
-# validation = BREAKLogical('data/', train=True, valid=True)
-# testing = BREAKLogical('data/', train=False, valid=False)
+validation = BREAKLogical('data/', train=True, valid=True)
+testing = BREAKLogical('data/', train=False, valid=False)
+# print(testing[50])
+
+count = 0
+for ex in testing:
+    if ex[1]:
+        count += 1
+
+print(count, len(testing))
 # max_len = 0
 # idx = 0
 # # enumerate(break_dataloader)
@@ -137,8 +145,8 @@
 # print("target masks shape", masks_target.shape)
 # print("tar1 interesting", masks_target[0].sum())
 
-import torch
-a=torch.tensor([[1,2],[3,4]])
-print(a)
-for i, it in enumerate(torch.transpose(a,0, 1)):
-    print(i, it)
+# import torch
+# a=torch.tensor([[1,2],[3,4]])
+# print(a)
+# for i, it in enumerate(torch.transpose(a,0, 1)):
+#     print(i, it)

@@ -13,12 +13,12 @@ class BaseTester:
     Handles the testing loop, logging, loading checkpoints, timings and presenting the testing results.
     """
 
-    def __init__(self, model, criterion, metric_ftns, config, device, data_loader, evaluation=True):
+    def __init__(self, model, criterion, metric_fns, config, device, data_loader, evaluation=True):
         """
         Initiates the Base tester.
         :param model:       The model to test.
         :param criterion:   The loss function.
-        :param metric_ftns: The metrics on which the model will be evaluated during test time.
+        :param metric_fns: The metrics on which the model will be evaluated during test time.
         :param config:      Configuration file.
         :param TODO
         """
@@ -27,7 +27,7 @@ class BaseTester:
 
         self.model = model
         self.criterion = criterion
-        self.metric_ftns = metric_ftns
+        self.metric_fns = metric_fns
         self.device = device
         self.data_loader = data_loader
         self.evaluation = evaluation
@@ -69,6 +69,7 @@ class BaseTester:
             log.update(result)
 
             # When testing, print test results.
+            # TODO check why test loss =0.0
             if not self.evaluation:
                 self.logger.info('Testing Finished.')
                 self.logger.info('------------ Test Result ------------')

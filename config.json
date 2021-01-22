@@ -3,10 +3,12 @@
     "n_gpu": 1,
 
     "arch": {
+        "module": "model.model",
         "type": "MnistModel",
         "args": {}
     },
     "data_loader": {
+        "module": "data_loader.data_loaders",
         "type": "MnistDataLoader",
         "args":{
             "data_dir": "data/",
@@ -36,18 +38,24 @@
         }
     },
     "trainer": {
-        "type": "Trainer",
+        "type": "MNISTTrainer",
 
-        "epochs": 2,
+        "epochs": 3,
 
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 1,
         
-        "monitor": "max accuracy_MNIST",
+        "monitor": "max val_accuracy_qdmr",
         "early_stop": 10,
 
         "tensorboard": true,
-        "best_metrics_log": "epoch loss accuracy_MNIST"
+        "best_metrics_log": "epoch loss accuracy_MNIST val_loss val_accuracy_MNIST"
+    },
+    "tester": {
+        "type": "MNISTTester",
+        "verbosity": 1,
+        "metrics_log": "loss accuracy_MNIST",
+        "tensorboard": true
     }
 }
