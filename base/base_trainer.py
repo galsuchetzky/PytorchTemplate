@@ -78,14 +78,14 @@ class BaseTrainer:
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def _valid_epoch(self, epoch):
-        """
-        Evaluation logic for an epoch.
-
-        :param epoch: Current epoch number.
-        """
-        raise NotImplementedError
+    # @abstractmethod
+    # def _valid_epoch(self, epoch):
+    #     """
+    #     Evaluation logic for an epoch.
+    #
+    #     :param epoch: Current epoch number.
+    #     """
+    #     raise NotImplementedError
 
     def train(self):
         """

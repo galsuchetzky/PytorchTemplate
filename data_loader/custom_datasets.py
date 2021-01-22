@@ -56,6 +56,9 @@ class BREAKLogical(data.Dataset):
         # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
         self.golds = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.golds]
 
+    def get_dataset_type(self):
+        return self.dataset_type
+
     @staticmethod
     def load_dataset(data_dir, dataset_type, logger=None):
         """

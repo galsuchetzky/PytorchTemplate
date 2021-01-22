@@ -128,8 +128,8 @@ class Seq2SeqSimpleTester(BaseTester):
     Trainer for a simple seq2seq mode.
     """
 
-    def __init__(self, model, criterion, metric_ftns, optimizer, config, device,
-                 data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
+    def __init__(self, model, criterion, metric_ftns, config, device,
+                 data_loader, evaluation=True):
         """
 
         :param model:
@@ -144,34 +144,19 @@ class Seq2SeqSimpleTester(BaseTester):
         :param len_epoch:
         """
         # TODO document this
-        self.config = config
-        self.device = device
         self.vocab = model.vocab
-        self.data_loader = data_loader
         self.question_pad_length = config['data_loader']['question_pad_length']
         self.qdmr_pad_length = config['data_loader']['qdmr_pad_length']
         self.pad_idx = self.vocab['<pad>']
+
+        # Overriding the criterion.
         self.criterion = CrossEntropyLoss(ignore_index=self.pad_idx)
-        if len_epoch is None:
-            # epoch-based training
-            self.len_epoch = len(self.data_loader)
-        else:
-            # iteration-based training
-            self.data_loader = inf_loop(data_loader)
-            self.len_epoch = len_epoch
 
-        self.valid_data_loader = valid_data_loader
-        self.do_validation = self.valid_data_loader is not None
-        self.lr_scheduler = lr_scheduler
-        self.log_step = int(np.sqrt(data_loader.batch_size))
+        super().__init__(model, self.criterion, metric_ftns, config, device, data_loader, evaluation)
 
-        super().__init__(model, self.criterion, metric_ftns, optimizer, config)
-
-        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
         self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
 
-
-    def _valid_epoch(self, epoch):
+    def _evaluate(self):
         """
         Validate after training an epoch.
 
@@ -179,42 +164,24 @@ class Seq2SeqSimpleTester(BaseTester):
         :return: A log that contains information about validation
         """
         # Sets the model to evaluation mode.
-        self.model.eval()
         self.valid_metrics.reset()
 
-        with torch.no_grad():
-            for batch_idx, (data, target) in enumerate(self.valid_data_loader):
-                data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
-                target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
+        for batch_idx, (data, target) in enumerate(self.data_loader):
+            data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
+            target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
 
-                # Run the model on the batch and calculate the loss
-                output = self.model(data, target, evaluation_mode=True)
-                output = torch.transpose(output, 1, 2)
-                pred = torch.argmax(output, dim=1)
-                loss = self.criterion(output, target)
+            # Run the model on the batch and calculate the loss
+            output = self.model(data, target, evaluation_mode=True)
+            output = torch.transpose(output, 1, 2)
+            pred = torch.argmax(output, dim=1)
+            loss = self.criterion(output, target)
 
-                self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
-                self.valid_metrics.update('loss', loss.item())
-                for met in self.metric_ftns:
-                    self.valid_metrics.update(met.__name__, met(pred, target))
-                # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+            self.valid_metrics.update('loss', loss.item())
+            for met in self.metric_ftns:
+                self.valid_metrics.update(met.__name__, met(pred, target))
 
-                # print('----------------------------------------------------------------')
-                # print(tensor_to_str(self.vocab, pred))
-                # print(tensor_to_str(self.vocab, target))
-                # print('----------------------------------------------------------------')
 
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():
             self.writer.add_histogram(name, p, bins='auto')
         return self.valid_metrics.result()
-
-    def _progress(self, batch_idx):
-        base = '[{}/{} ({:.0f}%)]'
-        if hasattr(self.data_loader, 'n_samples'):
-            current = batch_idx * self.data_loader.batch_size
-            total = self.data_loader.n_samples
-        else:
-            current = batch_idx
-            total = self.len_epoch
-        return base.format(current, total, 100.0 * current / total)

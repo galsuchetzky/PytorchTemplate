@@ -8,6 +8,7 @@ from utils import inf_loop, MetricTracker
 from tqdm import tqdm
 from data_loader import batch_to_tensor
 from torch.nn import CrossEntropyLoss
+from tester import Seq2SeqSimpleTester
 
 
 # TODO add documentation and complete implementation for the Seq2SeqSimpleTrainer
@@ -36,6 +37,7 @@ class Trainer(BaseTrainer):
 
         self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
         self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+
 
     def _train_epoch(self, epoch):
         """
@@ -168,8 +170,15 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         super().__init__(model, self.criterion, metric_ftns, optimizer, config)
 
         self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
-        self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        # self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
 
+        # Define evaluator.
+        self.evaluator = Seq2SeqSimpleTester(self.model,
+                                             self.criterion,
+                                             self.metric_ftns,
+                                             self.config,
+                                             self.device,
+                                             self.valid_data_loader)
     def _train_epoch(self, epoch):
         """
         Training logic for an epoch.
@@ -230,7 +239,9 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
 
         # If validation split exists, evaluate on validation set as well.
         if self.do_validation:
-            val_log = self._valid_epoch(epoch)
+            # TODO print epoch stuff and add epoch to writer
+            # TODO self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
+            val_log = self.evaluator.test()
             log.update(**{'val_' + k: round(v, 5) for k, v in val_log.items()})
 
         if self.lr_scheduler is not None:
@@ -238,43 +249,43 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
 
         return log
 
-    def _valid_epoch(self, epoch):
-        """
-        Validate after training an epoch.
-
-        :param epoch: Integer, current training epoch.
-        :return: A log that contains information about validation
-        """
-        # Sets the model to evaluation mode.
-        self.model.eval()
-        self.valid_metrics.reset()
-
-        with torch.no_grad():
-            for batch_idx, (data, target) in enumerate(self.valid_data_loader):
-                data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
-                target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
-
-                # Run the model on the batch and calculate the loss
-                output = self.model(data, target, evaluation_mode=True)
-                output = torch.transpose(output, 1, 2)
-                pred = torch.argmax(output, dim=1)
-                loss = self.criterion(output, target)
-
-                self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
-                self.valid_metrics.update('loss', loss.item())
-                for met in self.metric_ftns:
-                    self.valid_metrics.update(met.__name__, met(pred, target))
-                # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
-
-                # print('----------------------------------------------------------------')
-                # print(tensor_to_str(self.vocab, pred))
-                # print(tensor_to_str(self.vocab, target))
-                # print('----------------------------------------------------------------')
-
-        # add histogram of model parameters to the tensorboard
-        for name, p in self.model.named_parameters():
-            self.writer.add_histogram(name, p, bins='auto')
-        return self.valid_metrics.result()
+    # def _valid_epoch(self, epoch):
+    #     """
+    #     Validate after training an epoch.
+    #
+    #     :param epoch: Integer, current training epoch.
+    #     :return: A log that contains information about validation
+    #     """
+    #     # Sets the model to evaluation mode.
+    #     self.model.eval()
+    #     self.valid_metrics.reset()
+    #
+    #     with torch.no_grad():
+    #         for batch_idx, (data, target) in enumerate(self.valid_data_loader):
+    #             data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
+    #             target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
+    #
+    #             # Run the model on the batch and calculate the loss
+    #             output = self.model(data, target, evaluation_mode=True)
+    #             output = torch.transpose(output, 1, 2)
+    #             pred = torch.argmax(output, dim=1)
+    #             loss = self.criterion(output, target)
+    #
+    #             self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
+    #             self.valid_metrics.update('loss', loss.item())
+    #             for met in self.metric_ftns:
+    #                 self.valid_metrics.update(met.__name__, met(pred, target))
+    #             # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+    #
+    #             # print('----------------------------------------------------------------')
+    #             # print(tensor_to_str(self.vocab, pred))
+    #             # print(tensor_to_str(self.vocab, target))
+    #             # print('----------------------------------------------------------------')
+    #
+    #     # add histogram of model parameters to the tensorboard
+    #     for name, p in self.model.named_parameters():
+    #         self.writer.add_histogram(name, p, bins='auto')
+    #     return self.valid_metrics.result()
 
     def _progress(self, batch_idx):
         base = '[{}/{} ({:.0f}%)]'
