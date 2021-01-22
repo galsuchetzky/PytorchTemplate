@@ -39,6 +39,7 @@ class BREAKLogical(data.Dataset):
             if valid:
                 self.dataset_type = 'validation'
 
+        self.logger.info('loading data split:' + self.dataset_type)
         self.dataset_logical = self.load_dataset(data_dir, 'logical-forms', self.logger)
         self.lexicon_dict = self.get_lexicon()[self.dataset_type]
         self.logger.info('dataset and lexicon ready.')
@@ -54,6 +55,9 @@ class BREAKLogical(data.Dataset):
         self.golds = self.dataset_logical[self.dataset_type]['decomposition']#[:100]
         # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
         self.golds = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.golds]
+
+    def get_dataset_type(self):
+        return self.dataset_type
 
     @staticmethod
     def load_dataset(data_dir, dataset_type, logger=None):

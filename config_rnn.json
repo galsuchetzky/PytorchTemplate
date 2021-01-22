@@ -1,8 +1,8 @@
 {
     "name": "SimpleRNN_Encoder_Decoder",
     "n_gpu": 1,
-
     "arch": {
+        "module": "model.model",
         "type": "EncoderDecoder",
         "args": {
             "batch_size": 32,
@@ -17,10 +17,10 @@
             }
         }
     },
-
     "data_loader": {
+        "module": "data_loader.data_loaders",
         "type": "BREAKDataLoader",
-        "args":{
+        "args": {
             "data_dir": "data/",
             "batch_size": 32,
             "shuffle": true,
@@ -32,14 +32,13 @@
     },
     "optimizer": {
         "type": "Adam",
-        "args":{
+        "args": {
             "lr": 0.001,
             "weight_decay": 0,
             "amsgrad": true
         }
     },
     "loss": "CrossEntropyLoss",
-
     "metrics": [
         "accuracy_qdmr"
     ],
@@ -52,17 +51,19 @@
     },
     "trainer": {
         "type": "Seq2SeqSimpleTrainer",
-
-        "epochs": 10,
-
+        "epochs": 4,
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 1,
-        
         "monitor": "max val_accuracy_qdmr",
         "early_stop": 10,
-
         "tensorboard": true,
         "best_metrics_log": "epoch loss accuracy_qdmr val_loss val_accuracy_qdmr"
+    },
+    "tester": {
+        "type": "Seq2SeqSimpleTester",
+        "verbosity": 1,
+        "metrics_log": "loss accuracy_qdmr",
+        "tensorboard": true
     }
 }

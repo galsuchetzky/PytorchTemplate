@@ -12,13 +12,13 @@ class BaseTrainer:
     Base class for all trainers.
     Handles the training loop, logging, saving checkpoints, timings and presenting the training results.
     """
-
-    def __init__(self, model, criterion, metric_ftns, optimizer, config):
+    #TODO add device, data_loader as other params that are in children. from run
+    def __init__(self, model, criterion, metric_fns, optimizer, config):
         """
         Initiates the Base trainer.
         :param model:       The model to train.
         :param criterion:   The loss function.
-        :param metric_ftns: The metrics on which the model will be evaluated during evaluation or train time.
+        :param metric_fns: The metrics on which the model will be evaluated during evaluation or train time.
         :param optimizer:   The optimizer to use for optimizing the parameters of the model.
         :param config:      Configuration file.
         """
@@ -27,7 +27,7 @@ class BaseTrainer:
 
         self.model = model
         self.criterion = criterion
-        self.metric_ftns = metric_ftns
+        self.metric_fns = metric_fns
         self.optimizer = optimizer
 
         # Get training configurations
@@ -78,14 +78,14 @@ class BaseTrainer:
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def _valid_epoch(self, epoch):
-        """
-        Evaluation logic for an epoch.
-
-        :param epoch: Current epoch number.
-        """
-        raise NotImplementedError
+    # @abstractmethod
+    # def _valid_epoch(self, epoch):
+    #     """
+    #     Evaluation logic for an epoch.
+    #
+    #     :param epoch: Current epoch number.
+    #     """
+    #     raise NotImplementedError
 
     def train(self):
         """

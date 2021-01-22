@@ -88,7 +88,7 @@ class ConfigParser:
         modification = {opt.target: getattr(args, _get_opt_name(opt.flags)) for opt in options}
         return cls(config, resume, modification)
 
-    def init_obj(self, name, module, *args, **kwargs):
+    def init_obj(self, name, module=None, *args, **kwargs):
         """
         Finds a function handle with the name given as 'type' in config, and returns the
         instance initialized with corresponding arguments given.
