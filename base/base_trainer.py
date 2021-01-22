@@ -148,9 +148,10 @@ class BaseTrainer:
             for key, value in log.items():
                 self.logger.info('    {:15s}: {}'.format(str(key), value))
 
-            self.logger.info('------------- Best --------------')
-            for key in self.best_model_metrics_log:
-                self.logger.info('    {:15s}: {}'.format(str(key), self.model_best_metrics[key]))
+            if self.model_best_metrics:
+                self.logger.info('------------- Best --------------')
+                for key in self.best_model_metrics_log:
+                    self.logger.info('    {:15s}: {}'.format(str(key), self.model_best_metrics[key]))
 
         self.logger.info(f'Training finished.\nTotal training time: {time_elapsed(train_start_time)}')
         self.logger.info(f'best model accuracy: {round(self.mnt_best, 3) * 100}%')

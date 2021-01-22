@@ -8,7 +8,6 @@ def main(config):
     run(config, train=False)
 
 
-
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='PyTorch Template')
     args.add_argument('-c', '--config', default=None, type=str,

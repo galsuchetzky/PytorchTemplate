@@ -13,12 +13,12 @@ class BaseTester:
     Handles the testing loop, logging, loading checkpoints, timings and presenting the testing results.
     """
 
-    def __init__(self, model, criterion, metric_fns, config, device, data_loader, evaluation=True):
+    def __init__(self, model, criterion, metric_ftns, config, device, data_loader, evaluation=True):
         """
         Initiates the Base tester.
         :param model:       The model to test.
         :param criterion:   The loss function.
-        :param metric_fns: The metrics on which the model will be evaluated during test time.
+        :param metric_ftns: The metrics on which the model will be evaluated during test time.
         :param config:      Configuration file.
         :param TODO
         """
@@ -27,7 +27,7 @@ class BaseTester:
 
         self.model = model
         self.criterion = criterion
-        self.metric_fns = metric_fns
+        self.metric_ftns = metric_ftns
         self.device = device
         self.data_loader = data_loader
         self.evaluation = evaluation
@@ -54,7 +54,8 @@ class BaseTester:
         Common testing operations.
         """
         # Log start and set timer for timing the train.
-        self.logger.info('Starting evaluation on ' + self.data_loader.get_dataset_type() + ' set')
+        # TODO uncomment this
+        # self.logger.info('Starting evaluation on ' + self.data_loader.get_dataset_type() + ' set')
         eval_start_time = time.time()
 
         # Sets the model to evaluation mode.

@@ -34,7 +34,7 @@ class MNISTTester(BaseTester):
 
         super().__init__(model, criterion, metric_fns, config, device, data_loader, evaluation)
 
-        self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_fns], writer=self.writer)
+        self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
 
     def _evaluate(self):
         """
@@ -46,7 +46,7 @@ class MNISTTester(BaseTester):
         # Sets the model to evaluation mode.
         self.valid_metrics.reset()
         total_loss = 0.0
-        total_metrics = torch.zeros(len(self.metric_fns))
+        total_metrics = torch.zeros(len(self.metric_ftns))
 
         for i, (data, target) in enumerate(tqdm(self.data_loader)):
             data, target = data.to(self.device), target.to(self.device)
@@ -56,7 +56,7 @@ class MNISTTester(BaseTester):
             loss = self.criterion(output, target)
             batch_size = data.shape[0]
             total_loss += loss.item() * batch_size
-            for i, metric in enumerate(self.metric_fns):
+            for i, metric in enumerate(self.metric_ftns):
                 total_metrics[i] += metric(output, target) * batch_size
 
             self.valid_metrics.update('loss', loss.item())
@@ -64,11 +64,11 @@ class MNISTTester(BaseTester):
                 self.valid_metrics.update(met.__name__, met(output, target))
             self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
-
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():
             self.writer.add_histogram(name, p, bins='auto')
         return self.valid_metrics.result()
+
 
 class Seq2SeqSimpleTester(BaseTester):
     """
@@ -126,7 +126,6 @@ class Seq2SeqSimpleTester(BaseTester):
             self.valid_metrics.update('loss', loss.item())
             for met in self.metric_fns:
                 self.valid_metrics.update(met.__name__, met(pred, target))
-
 
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():
