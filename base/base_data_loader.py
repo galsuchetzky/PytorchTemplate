@@ -14,7 +14,7 @@ class BaseDataLoader(DataLoader):
     """
 
     def __init__(self, dataset, batch_size, shuffle, validation_split, num_workers, collate_fn=default_collate,
-                 drop_last=True):
+                 drop_last=False):
         """
         Initiates the DataLoader with the given parameters and initiates the super class.
         :param dataset (Dataset): dataset from which to load the data.
@@ -24,6 +24,7 @@ class BaseDataLoader(DataLoader):
                                                 If float, treats as percent of validation examples.
         :param num_workers (int): how many subprocesses to use for data loading.
         :param collate_fn (Callable): merges a list of samples to form a mini-batch of Tensor(s).
+        :param drop_last determines behavior of last non-full batch
         """
         # Define logger
         if not LOGGER_SETUP:
