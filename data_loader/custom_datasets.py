@@ -39,6 +39,7 @@ class BREAKLogical(data.Dataset):
             if valid:
                 self.dataset_type = 'validation'
 
+        self.logger.info('loading data split:' + self.dataset_type)
         self.dataset_logical = self.load_dataset(data_dir, 'logical-forms', self.logger)
         self.lexicon_dict = self.get_lexicon()[self.dataset_type]
         self.logger.info('dataset and lexicon ready.')

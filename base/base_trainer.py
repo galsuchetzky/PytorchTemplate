@@ -12,7 +12,7 @@ class BaseTrainer:
     Base class for all trainers.
     Handles the training loop, logging, saving checkpoints, timings and presenting the training results.
     """
-
+    #TODO add device, data_loader as other params that are in children. from run
     def __init__(self, model, criterion, metric_ftns, optimizer, config):
         """
         Initiates the Base trainer.
