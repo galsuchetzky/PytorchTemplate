@@ -7,13 +7,13 @@ import logging
 import re
 import spacy
 
-from tester import Decomposition, draw_decomposition_graph
+from ..decomposition import Decomposition, draw_decomposition_graph
 from utils.graph import get_graph_levels
 
-from tester import prepare_node
-import tester as norm_rules
-import tester as op_norm_rules
-from tester import QDMROperation
+from . import prepare_node
+import normal_form.normalization_rules as norm_rules
+import operations_normalization_rules as op_norm_rules
+from ...BREAK_qdmr_to_program import QDMROperation
 
 
 _logger = logging.getLogger(__name__)

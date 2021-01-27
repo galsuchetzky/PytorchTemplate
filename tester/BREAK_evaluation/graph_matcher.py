@@ -10,7 +10,7 @@ from multiprocessing import Pool
 # from progressbar import ProgressBar, SimpleProgress
 from tqdm import tqdm
 
-from tester import SequenceMatchScorer
+from .sequence_matcher import SequenceMatchScorer
 from utils.timeout import exit_after
 
 
