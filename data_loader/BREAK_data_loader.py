@@ -1,5 +1,5 @@
 from data_loader import custom_datasets
-from base import BaseDataLoader
+from .base_data_loader import BaseDataLoader
 
 
 class BREAKDataLoader(BaseDataLoader):

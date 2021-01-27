@@ -97,20 +97,21 @@
 # from torchtext.data.utils import get_tokenizer
 # from data_loader.data_loaders import BREAKDataLoader
 from data_loader import BREAKLogical
+
 # print("starting")
 # en_tokenizer = get_tokenizer('spacy', language='en_core_web_sm')
 # # break_dataloader = BREAKDataLoader('data/', 1, True, 0, 1)
-# training = BREAKLogical('data/', train=True, valid=False)
-validation = BREAKLogical('data/', train=True, valid=True)
-testing = BREAKLogical('data/', train=False, valid=False)
+training = BREAKLogical('data/', train=True, valid=False)
+# validation = BREAKLogical('data/', train=True, valid=True)
+# testing = BREAKLogical('data/', train=False, valid=False)
 # print(testing[50])
 
-count = 0
-for ex in testing:
-    if ex[1]:
-        count += 1
-
-print(count, len(testing))
+# count = 0
+# for ex in testing:
+#     if ex[1]:
+#         count += 1
+#
+# print(count, len(testing))
 # max_len = 0
 # idx = 0
 # # enumerate(break_dataloader)
@@ -150,3 +151,13 @@ print(count, len(testing))
 # print(a)
 # for i, it in enumerate(torch.transpose(a,0, 1)):
 #     print(i, it)
+
+from tester import evaluate
+ids = []
+questions = []
+decomps = []
+golds = []
+metadata = []
+output_path = ""
+
+print(training)

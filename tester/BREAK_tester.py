@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 
-from base import BaseTester
+from .base_tester import BaseTester
 from utils import MetricTracker
 from data_loader import batch_to_tensor
 from torch.nn import CrossEntropyLoss

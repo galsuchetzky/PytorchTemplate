@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from base import BaseTrainer
+from base_trainer import BaseTrainer
 from utils import inf_loop, MetricTracker
 from tqdm import tqdm
 from data_loader import batch_to_tensor

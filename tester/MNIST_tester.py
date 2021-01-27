@@ -1,7 +1,7 @@
 import torch
 
 from torchvision.utils import make_grid
-from base import BaseTester
+from .base_tester import BaseTester
 from utils import MetricTracker
 from tqdm import tqdm
 

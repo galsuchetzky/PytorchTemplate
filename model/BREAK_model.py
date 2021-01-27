@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from base import BaseModel
+from base_model import BaseModel
 
 
 # TODO add documentation and shapes everywhere.
