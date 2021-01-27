@@ -44,6 +44,7 @@ class BREAKLogical(data.Dataset):
                 self.dataset_type = 'validation'
 
         self.logger.info('loading data split:' + self.dataset_type)
+
         self.dataset_logical = self.load_dataset(data_dir, 'logical-forms', self.logger)
         self.lexicon_dict = self.get_lexicon()[self.dataset_type]
         self.logger.info('dataset and lexicon ready.')
@@ -98,7 +99,7 @@ class BREAKLogical(data.Dataset):
         :return: The retrieved example.
         """
         example = (self.ids[idx], self.questions[idx], self.golds[idx].to_string())
-        return example#[0], self.clean_qdmr(example[1])
+        return example  # [0], self.clean_qdmr(example[1])
 
     # def clean_qdmr(self, qdmr):
     #     """
