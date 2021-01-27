@@ -78,7 +78,7 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         # Sets the model to training mode.
         self.model.train()
         self.train_metrics.reset()
-        with tqdm(total=self.data_loader.n_samples) as progbar:
+        with tqdm(total=len(self.data_loader)) as progbar:
             for batch_idx, (data, target) in enumerate(self.data_loader):
                 data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
                 target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
@@ -119,9 +119,11 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
                     break
 
                 # Update the progress bar.
-                progbar.update(self.data_loader.init_kwargs['batch_size'])
+                progbar.update(1)
                 epoch_part = str(epoch) + '/' + str(self.epochs)
-                progbar.set_postfix(epoch=epoch_part, LOSS=loss.item())
+                progbar.set_postfix(epoch=epoch_part, LOSS=loss.item(),
+                                    batch_size=self.data_loader.init_kwargs['batch_size'],
+                                    samples=self.data_loader.n_samples)
 
         # Save the calculated metrics for that epoch.
         log = self.train_metrics.result()

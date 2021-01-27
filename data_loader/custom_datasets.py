@@ -13,6 +13,7 @@ from subprocess import run
 
 DEBUG_EXAMPLES_AMOUNT = 300
 
+
 class BREAKLogical(data.Dataset):
     """
     The Break dataset: https://github.com/allenai/Break.
@@ -57,12 +58,14 @@ class BREAKLogical(data.Dataset):
         if debug:
             self.questions = self.questions[:DEBUG_EXAMPLES_AMOUNT]
             self.golds = self.golds[:DEBUG_EXAMPLES_AMOUNT]
-            print('len of questions:', len(self.questions))
-            print('len of golds:', len(self.golds))
 
 
         # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
         self.golds = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.golds]
+        # print(self.dataset_type, 'len of questions:', len(self.questions))
+        # print(self.dataset_type, 'len of golds:', len(self.golds))
+        # print(self.dataset_type, 'len self:', len(self))
+
 
     def get_dataset_type(self):
         return self.dataset_type

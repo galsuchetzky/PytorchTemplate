@@ -55,7 +55,7 @@ class BaseTester:
         Common testing operations.
         """
         # Log start and set timer for timing the train.
-        # TODO uncomment this
+        # TODO uncomment this (find solution for MNIST)
         # self.logger.info('Starting evaluation on ' + self.data_loader.get_dataset_type() + ' set')
         eval_start_time = time.time()
 

@@ -25,6 +25,7 @@ class BREAKDataLoader(BaseDataLoader):
         self.dataset_type = self.dataset.get_dataset_type()
         self.validation_split = 0.0  # make sure to use all data
         self.drop_last = True
+        self.debug = debug
         super().__init__(self.dataset, batch_size, shuffle, self.validation_split, num_workers,
                          drop_last=self.drop_last)
 
@@ -34,7 +35,7 @@ class BREAKDataLoader(BaseDataLoader):
         :return: The generated dataloader.
         """
         return BREAKDataLoaderValid(self.data_dir, self.batch_size, self.shuffle, self.validation_split,
-                                    self.num_workers)
+                                    self.num_workers, debug=self.debug)
 
     def get_dataset_type(self):
         return self.dataset_type
@@ -45,12 +46,14 @@ class BREAKDataLoaderValid(BaseDataLoader):
     Class for loading the validation data for BREAK.
     """
 
-    def __init__(self, data_dir, batch_size, shuffle=True, validation_split=0.0, num_workers=1, training=True):
+    def __init__(self, data_dir, batch_size, shuffle=True, validation_split=0.0, num_workers=1, training=True,
+                 debug=False):
         self.data_dir = data_dir
-        self.dataset = custom_datasets.BREAKLogical(self.data_dir, train=training, valid=True)
+        self.dataset = custom_datasets.BREAKLogical(self.data_dir, train=training, valid=True, debug=debug)
         self.dataset_type = self.dataset.get_dataset_type()
         self.drop_last = True
         super().__init__(self.dataset, batch_size, shuffle, validation_split, num_workers, drop_last=self.drop_last)
+        # print('valid len', len(self.dataset))
 
     def get_dataset_type(self):
         return self.dataset_type

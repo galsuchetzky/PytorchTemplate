@@ -48,20 +48,26 @@ class Seq2SeqSimpleTester(BaseTester):
         """
         # Sets the model to evaluation mode.
         self.valid_metrics.reset()
-        print("dataloader len is", len(self.data_loader)) # TODO for debug should be 300, yet it is 241 for some reason.
-        for batch_idx, (data, target) in enumerate(tqdm(self.data_loader)):
-            data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
-            target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
+        with tqdm(total=len(self.data_loader)) as progbar:
+            for batch_idx, (data, target) in enumerate(self.data_loader):
+                data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
+                target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
 
-            # Run the model on the batch and calculate the loss
-            output = self.model(data, target, evaluation_mode=True)
-            output = torch.transpose(output, 1, 2)
-            pred = torch.argmax(output, dim=1)
-            loss = self.criterion(output, target)
+                # Run the model on the batch and calculate the loss
+                output = self.model(data, target, evaluation_mode=True)
+                output = torch.transpose(output, 1, 2)
+                pred = torch.argmax(output, dim=1)
+                loss = self.criterion(output, target)
 
-            self.valid_metrics.update('loss', loss.item())
-            for met in self.metric_ftns:
-                self.valid_metrics.update(met.__name__, met(pred, target))
+                self.valid_metrics.update('loss', loss.item())
+                for met in self.metric_ftns:
+                    self.valid_metrics.update(met.__name__, met(pred, target))
+
+                # Update the progress bar.
+                progbar.update(1)
+                progbar.set_postfix(LOSS=loss.item(),
+                                    batch_size=self.data_loader.init_kwargs['batch_size'],
+                                    samples=self.data_loader.n_samples)
 
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():

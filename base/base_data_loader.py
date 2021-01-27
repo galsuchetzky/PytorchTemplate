@@ -107,8 +107,4 @@ class BaseDataLoader(DataLoader):
             return None
         else:
             dataloader = DataLoader(sampler=self.valid_sampler, **self.init_kwargs)
-            # TODO for some reason the MNIST dataloader only loads 235 samples (or less) instead of the real needed
-            #  amount.
-            print(len(dataloader))
-            print(len(self.valid_sampler))
             return dataloader
