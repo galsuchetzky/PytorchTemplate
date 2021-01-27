@@ -7,7 +7,7 @@ from data_loader import batch_to_tensor
 from torch.nn import CrossEntropyLoss
 
 
-# # TODO add documentation and complete implementation for the Seq2SeqSimpleTrainer
+# TODO add documentation and complete implementation for the Seq2SeqSimpleTrainer
 
 
 class Seq2SeqSimpleTester(BaseTester):
@@ -19,14 +19,13 @@ class Seq2SeqSimpleTester(BaseTester):
                  data_loader, evaluation=True):
         """
 
-        :param model:
+        :param model: A model to test.
         :param criterion: we ignore this value and overwrite it
-        :param metric_ftns:
-        :param config:
-        :param device:
-        :param data_loader:
+        :param metric_ftns: The names of the metric functions to use.
+        :param config: The configuration.
+        :param device: The device to use for the testing.
+        :param data_loader: The dataloader to use for loading the testing data.
         """
-        # TODO document this
         self.vocab = model.vocab
         self.question_pad_length = config['data_loader']['question_pad_length']
         self.qdmr_pad_length = config['data_loader']['qdmr_pad_length']

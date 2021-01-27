@@ -38,6 +38,9 @@ class BREAKDataLoader(BaseDataLoader):
                                     self.num_workers, debug=self.debug)
 
     def get_dataset_type(self):
+        """
+        :return: The dataset type.
+        """
         return self.dataset_type
 
 
