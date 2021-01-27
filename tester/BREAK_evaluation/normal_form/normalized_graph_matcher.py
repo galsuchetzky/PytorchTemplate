@@ -11,7 +11,7 @@ from ..decomposition import Decomposition, draw_decomposition_graph
 from utils.graph import get_graph_levels
 
 from . import prepare_node
-import normal_form.normalization_rules as norm_rules
+import normalization_rules as norm_rules
 import operations_normalization_rules as op_norm_rules
 from ...BREAK_qdmr_to_program import QDMROperation
 
