@@ -96,7 +96,7 @@
 #
 # from torchtext.data.utils import get_tokenizer
 # from data_loader.data_loaders import BREAKDataLoader
-from data_loader import BREAKLogical
+from data_loader.custom_datasets import BREAKLogical
 
 # print("starting")
 # en_tokenizer = get_tokenizer('spacy', language='en_core_web_sm')
@@ -152,7 +152,7 @@ training = BREAKLogical('data/', train=True, valid=False)
 # for i, it in enumerate(torch.transpose(a,0, 1)):
 #     print(i, it)
 
-from tester import evaluate
+from tester.BREAK_evaluate_predictions import evaluate, get_exact_match
 ids = []
 questions = []
 decomps = []
@@ -160,4 +160,6 @@ golds = []
 metadata = []
 output_path = ""
 
-print(training)
+id, question, gold = training[0]
+print(evaluate([id], [question], [gold], [gold], None, 'saved'))
+# print(get_exact_match(training[0][1], training[0][1]))

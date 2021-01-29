@@ -1,24 +1,26 @@
-from nlp import load_dataset
 import time
 import pickle
+
+from nlp import load_dataset
 from pathlib import Path
-from utils import read_json, write_json
+from utils.util import read_json, write_json
 from collections import defaultdict
 
+
 def save_obj(dir_path, obj, name):
-	Path(dir_path).mkdir(parents=True, exist_ok=True)
-	file_path = dir_path / (name + '.pkl')
-	if not file_path.is_file():
-		with open(str(file_path), 'wb') as f:
-			pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
-	else:
-		print("already there")
+    Path(dir_path).mkdir(parents=True, exist_ok=True)
+    file_path = dir_path / (name + '.pkl')
+    if not file_path.is_file():
+        with open(str(file_path), 'wb') as f:
+            pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+    else:
+        print("already there")
 
 
 def load_obj(dir_path, name):
-	file_path = dir_path / (name + '.pkl')
-	with open(str(file_path), 'rb') as f:
-		return pickle.load(f)
+    file_path = dir_path / (name + '.pkl')
+    with open(str(file_path), 'rb') as f:
+        return pickle.load(f)
 
 
 QDMR = load_dataset('break_data', 'QDMR', cache_dir='.\\data\\')
@@ -54,26 +56,26 @@ start = time.time()
 # 			break
 
 
-lexicon_dict = {'train':dict(), 'validation':dict(), 'test':dict()}
-lexicon_check = {'train':dict(), 'validation':dict(), 'test':dict()}
+lexicon_dict = {'train': dict(), 'validation': dict(), 'test': dict()}
+lexicon_check = {'train': dict(), 'validation': dict(), 'test': dict()}
 for data_split in LOGICAL:
-	lex_idx = 0
-	lexicon_split = LEXICON[data_split]
-	for i, logic_example in enumerate(LOGICAL[data_split]):
-		ques = logic_example['question_text']
-		for j in range(lex_idx, len(lexicon_split)):
-			lexicon_example = lexicon_split[j]
-			if lexicon_example['source'] == ques:
-				lexicon_dict[data_split][i] = lexicon_example['allowed_tokens']
-				lexicon_check[data_split][i] = lexicon_example['source']
-				lex_idx = j + 1
-				break
+    lex_idx = 0
+    lexicon_split = LEXICON[data_split]
+    for i, logic_example in enumerate(LOGICAL[data_split]):
+        ques = logic_example['question_text']
+        for j in range(lex_idx, len(lexicon_split)):
+            lexicon_example = lexicon_split[j]
+            if lexicon_example['source'] == ques:
+                lexicon_dict[data_split][i] = lexicon_example['allowed_tokens']
+                lexicon_check[data_split][i] = lexicon_example['source']
+                lex_idx = j + 1
+                break
 
 index_check = 6234
 data_split = 'validation'
 print("took ", time.time() - start, "sec")
 for k in lexicon_check:
-	print(k)
+    print(k)
 # print("check len", len(lexicon_check['train']), "************")
 # print("train_map len", len(lexicon_dict['train']), "************")
 #

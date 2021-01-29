@@ -1,12 +1,12 @@
-from abc import ABC
 import logging
-
 import networkx as nx
-from spacy.tokens.token import Token
-
-from tester import QDMROperation
 import tester as qdmr
-from tester import DecomposeRule, ReferenceToken, run_tests
+
+from abc import ABC
+from spacy.tokens.token import Token
+from tester.BREAK_qdmr_to_program import QDMROperation
+from tester.BREAK_evaluation.normal_form.normalization_rules import DecomposeRule, ReferenceToken, run_tests
+
 
 _logger = logging.getLogger(__name__)
 

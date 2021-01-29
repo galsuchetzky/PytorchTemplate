@@ -5,7 +5,7 @@ from collections import Counter
 from torchtext.vocab import Vocab
 from torchtext.utils import download_from_url, extract_archive
 import io
-from data_loader import BREAKDataLoader
+from data_loader.BREAK_data_loader import BREAKDataLoader
 import spacy
 
 spacy.load('en_core_web_sm')

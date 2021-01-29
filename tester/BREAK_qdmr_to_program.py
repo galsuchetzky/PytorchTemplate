@@ -10,7 +10,7 @@ from enum import Enum
 DELIMITER = ';'
 REF = '#'
 
-pd.set_option('display.max_colwidth', -1)
+pd.set_option('display.max_colwidth', None)
 
 def parse_decomposition(qdmr):
     """Parses the decomposition into an ordered list of steps

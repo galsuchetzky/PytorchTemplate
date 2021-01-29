@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 
-from logger import setup_logging, LOGGER_SETUP
+from logger.logger import setup_logging, LOGGER_SETUP
 from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
 from torch.utils.data.sampler import SubsetRandomSampler

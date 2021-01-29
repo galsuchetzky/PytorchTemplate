@@ -67,6 +67,9 @@ class Decomposition(object):
         graph = self.to_graph(False)
         draw_decomposition_graph(graph)
 
+    def __repr__(self):
+        return 'return ' + "; return ".join([x.replace("  ", " ").strip() for x in self.decomposition_list])
+
 
 def draw_decomposition_graph(graph, title=None, pos=None):
     options = {

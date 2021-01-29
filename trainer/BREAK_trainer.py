@@ -2,11 +2,11 @@ import numpy as np
 import torch
 
 from base_trainer import BaseTrainer
-from utils import inf_loop, MetricTracker
+from utils.util import inf_loop, MetricTracker
 from tqdm import tqdm
-from data_loader import batch_to_tensor
+from data_loader.vocabs import batch_to_tensor
 from torch.nn import CrossEntropyLoss
-from tester import Seq2SeqSimpleTester
+from tester.BREAK_tester import Seq2SeqSimpleTester
 
 
 # TODO add documentation and complete implementation for the Seq2SeqSimpleTrainer

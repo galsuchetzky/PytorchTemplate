@@ -1,16 +1,16 @@
-
 import numpy as np
 # import neuralcoref
 import pandas as pd
 import spacy
+import torch.nn as nn
 
-from tester import Decomposition
-from tester import GraphMatchScorer, get_ged_plus_scores
-from tester import get_sari
-from tester import SequenceMatchScorer
+from tester.BREAK_evaluation.decomposition import Decomposition
+from tester.BREAK_evaluation.graph_matcher import GraphMatchScorer, get_ged_plus_scores
+from tester.BREAK_evaluation.sari_hook import get_sari
+from tester.BREAK_evaluation.sequence_matcher import SequenceMatchScorer
 
 
-class ModelBase(object):
+class ModelBase(nn.Module):
     def __init__(self):
         self.parser = spacy.load('en_core_web_sm')
         # coref = neuralcoref.NeuralCoref(self.parser.vocab)

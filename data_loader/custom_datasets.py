@@ -5,11 +5,12 @@ import logging
 import ast
 import re
 
-from logger import setup_logging, LOGGER_SETUP
+from logger.logger import setup_logging, LOGGER_SETUP
 from nlp import load_dataset
 from pathlib import Path
-from utils import save_obj, load_obj
+from utils.util import save_obj, load_obj
 from subprocess import run
+from tester.BREAK_evaluate_predictions import format_qdmr
 
 DEBUG_EXAMPLES_AMOUNT = 300
 
@@ -52,20 +53,17 @@ class BREAKLogical(data.Dataset):
             self.logger.info('Downloading spacy english core...')
             run(['python', '-m', 'spacy', 'download', 'en'])
 
-        # Prepare the questions and golds lists.
+        # Prepare the data parts
+        self.ids = self.dataset_logical[self.dataset_type]['question_id']
         self.questions = self.dataset_logical[self.dataset_type]['question_text']
-        self.golds = self.dataset_logical[self.dataset_type]['decomposition']
+        self.golds = [format_qdmr(decomp) for decomp in self.dataset_logical[self.dataset_type]["decomposition"]]
+        # self.golds = self.dataset_logical[self.dataset_type]['decomposition']
         if debug:
             self.questions = self.questions[:DEBUG_EXAMPLES_AMOUNT]
             self.golds = self.golds[:DEBUG_EXAMPLES_AMOUNT]
 
-
-        # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
-        self.golds = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.golds]
-        # print(self.dataset_type, 'len of questions:', len(self.questions))
-        # print(self.dataset_type, 'len of golds:', len(self.golds))
-        # print(self.dataset_type, 'len self:', len(self))
-
+        # # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
+        # self.golds = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.golds]
 
     def get_dataset_type(self):
         return self.dataset_type
@@ -99,16 +97,16 @@ class BREAKLogical(data.Dataset):
         :param idx: The index of the example to retrieve.
         :return: The retrieved example.
         """
-        example = (self.questions[idx], self.golds[idx])
-        return example[0], self.clean_qdmr(example[1])
+        example = (self.ids[idx], self.questions[idx], self.golds[idx])
+        return example#[0], self.clean_qdmr(example[1])
 
-    def clean_qdmr(self, qdmr):
-        """
-        Removes the 'return' statement from the beginning of each qdmr entry.
-        :param qdmr: The qdmr to clean.
-        :return: The cleaned qdmr.
-        """
-        return qdmr.replace('return ', '')
+    # def clean_qdmr(self, qdmr):
+    #     """
+    #     Removes the 'return' statement from the beginning of each qdmr entry.
+    #     :param qdmr: The qdmr to clean.
+    #     :return: The cleaned qdmr.
+    #     """
+    #     return qdmr.replace('return ', '')
 
     def __len__(self):
         """

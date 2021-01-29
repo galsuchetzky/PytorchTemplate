@@ -3,8 +3,8 @@ import time
 
 from abc import abstractmethod
 from numpy import inf
-from logger import TensorboardWriter
-from utils import time_elapsed, time_remaining
+from logger.logger import TensorboardWriter
+from utils.util import time_elapsed, time_remaining
 
 
 class BaseTrainer:

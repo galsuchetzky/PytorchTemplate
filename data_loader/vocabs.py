@@ -4,8 +4,8 @@ import torch
 from pathlib import Path
 from collections import Counter
 from torchtext.vocab import Vocab
-from utils import save_obj, load_obj
-from data_loader import BREAKLogical
+from utils.util import save_obj, load_obj
+from data_loader.custom_datasets import BREAKLogical
 from torchtext.data.utils import get_tokenizer
 
 # English tokenizer for tokenizing natural language sentences when building a vocabulary.

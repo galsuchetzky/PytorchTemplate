@@ -1,7 +1,4 @@
-from typing import Dict, Tuple
 import numbers
-from itertools import zip_longest
-
 import argparse
 import os
 import random
@@ -9,15 +6,17 @@ import re
 import numpy as np
 import pandas as pd
 import json
-
-from tester import Decomposition
-from tester import GraphMatchScorer, get_ged_plus_scores
-from tester import get_sari
-from tester import SequenceMatchScorer
-from tester import NormalizedGraphMatchScorer
 import tester as norm_rules
 
-pd.set_option('display.max_colwidth', -1)
+# from typing import Dict, Tuple
+from itertools import zip_longest
+from tester.BREAK_evaluation.decomposition import Decomposition
+from tester.BREAK_evaluation.graph_matcher import GraphMatchScorer#, get_ged_plus_scores
+from tester.BREAK_evaluation.sari_hook import get_sari
+from tester.BREAK_evaluation.sequence_matcher import SequenceMatchScorer
+from tester.BREAK_evaluation.normal_form.normalized_graph_matcher import NormalizedGraphMatchScorer
+
+pd.set_option('display.max_colwidth', None)
 
 
 def evaluate(ids, questions, decompositions, golds, metadata,
@@ -102,7 +101,7 @@ def evaluate(ids, questions, decompositions, golds, metadata,
 
     if output_path_base:
         write_evaluation_output(output_path_base, num_examples, **evaluation_dict)
-        ### Addition write the mean scores json
+        # Addition write the mean scores json
         write_evaluation_results(mean_scores)
 
     if metadata is not None:

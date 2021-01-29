@@ -1,9 +1,9 @@
 import torch
 import model.loss as module_loss
 import model.metric as module_metric
-from importlib import import_module
 
-from utils import prepare_device
+from importlib import import_module
+from utils.util import prepare_device
 
 
 def run(config, train=True):

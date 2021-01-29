@@ -1,18 +1,16 @@
-from overrides import overrides
 import networkx as nx
-from queue import Queue
-from collections import deque
 import logging
-
 import re
 import spacy
+import tester.BREAK_evaluation.normal_form.normalization_rules as norm_rules
+import tester.BREAK_evaluation.normal_form.operations_normalization_rules as op_norm_rules
 
+from queue import Queue
+from collections import deque
+# from overrides import overrides
 from ..decomposition import Decomposition, draw_decomposition_graph
 from utils.graph import get_graph_levels
-
-from . import prepare_node
-import normalization_rules as norm_rules
-import operations_normalization_rules as op_norm_rules
+from .normalization_rules import prepare_node
 from ...BREAK_qdmr_to_program import QDMROperation
 
 
