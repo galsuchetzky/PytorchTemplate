@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
 
-from base_model import BaseModel
-
-
+from .base_BREAK_model import BaseBREAKModel
+from .base_model import BaseModel
 # TODO add documentation and shapes everywhere.
 # TODO remove the "your code here" from the models. give credits in a docstring above to the course.
+
 
 class EncoderRNN(BaseModel):
     """
@@ -121,7 +121,7 @@ class DecoderSimple(BaseModel):
         return outputs
 
 
-class EncoderDecoder(BaseModel):
+class EncoderDecoder(BaseBREAKModel):
     """
     Seq2Seq basic.
     """
@@ -153,6 +153,8 @@ class EncoderDecoder(BaseModel):
                                      self.SOS_STR, self.EOS_STR, self.device)
 
     def forward(self, input_tensor, target_tensor, evaluation_mode=False, **kwargs):
+        # TODO stop predicting when reaching EOS (dont evaluate the rest predicted), but keep predicting for the rest of the batch_length
+        # TODO when in eval_mode do not use target at all
         encoder_hidden_first = self.encoder.init_hidden().to(self.device)
         encoder_outputs, encoder_h_m = self.encoder(input_tensor, encoder_hidden_first)
         decoder_hidden = encoder_h_m

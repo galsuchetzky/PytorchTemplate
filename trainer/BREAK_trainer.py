@@ -1,10 +1,10 @@
 import numpy as np
 import torch
 
-from base_trainer import BaseTrainer
+from .base_trainer import BaseTrainer
 from utils.util import inf_loop, MetricTracker
 from tqdm import tqdm
-from data_loader.vocabs import batch_to_tensor
+from data_loader.vocabs import batch_to_tensor, batch_to_str, pred_batch_to_str
 from torch.nn import CrossEntropyLoss
 from tester.BREAK_tester import Seq2SeqSimpleTester
 
@@ -79,7 +79,7 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         self.model.train()
         self.train_metrics.reset()
         with tqdm(total=len(self.data_loader)) as progbar:
-            for batch_idx, (data, target) in enumerate(self.data_loader):
+            for batch_idx, (_, data, target) in enumerate(self.data_loader):
                 data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
                 target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
                 # Run the model on the batch
@@ -104,7 +104,10 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
                 for met in self.metric_ftns:
                     with torch.no_grad():
                         pred = torch.argmax(output, dim=1)
-                    self.train_metrics.update(met.__name__, met(pred, target))
+                        data_str = batch_to_str(self.vocab, data, mask_data)
+                        target_str = batch_to_str(self.vocab, target, mask_target)
+                        pred_str = pred_batch_to_str(self.vocab, pred)
+                    self.train_metrics.update(met.__name__, met(pred_str, target_str, data_str))
 
                 # Log progress
                 if batch_idx % self.log_step == 0:

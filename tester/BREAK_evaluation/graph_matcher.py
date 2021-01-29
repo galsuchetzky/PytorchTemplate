@@ -58,7 +58,7 @@ class GraphMatchScorer(object):
     def get_edit_distance_match_scores(self, predictions, targets, structure_only=False):
         distances = []
         num_examples = len(predictions)
-        for i in tqdm(range(num_examples)):
+        for i in range(num_examples):
             try:
                 dist = self.normalized_graph_edit_distance(predictions[i], targets[i],
                                                            structure_only)

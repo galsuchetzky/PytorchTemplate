@@ -110,3 +110,38 @@ def tensor_to_str(vocab, tensor):
     :return: The result string.
     """
     return " ".join(vocab.itos[idx] for idx in tensor)
+
+
+def batch_to_str(vocab, batch, mask):
+    """
+
+    :param vocab:
+    :param batch:
+    :param mask:
+    :return:
+    """
+    lst = []
+    for data_row, mask_row in zip(batch, mask):
+        mask_row = mask_row == 1
+        lst.append(tensor_to_str(vocab, torch.masked_select(data_row, mask_row)))
+    return lst
+
+def pred_batch_to_str(vocab, pred):
+    """
+    create mask according to the first appearance of <'EOS_STR'>
+    then convert to list of str
+    :param vocab:
+    :param pred:
+    :return:
+    """
+    eos_id = vocab['<eos>']
+    eos_mask = pred == eos_id
+    # operations on the mask to find first eos values in the rows
+    mask_max_values, mask_max_indices = torch.max(eos_mask, dim=1)
+    # in case there are rows with no eos
+    mask_max_indices[mask_max_values == 0] = pred.shape[1]
+    mask = torch.ones(pred.shape)
+    # once encountered eos, mask out the rest of the prediction
+    for i in range(mask.shape[0]):
+        mask[i][mask_max_indices[i]:] = 0
+    return batch_to_str(vocab, pred, mask)

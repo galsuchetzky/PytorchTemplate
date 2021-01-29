@@ -2,8 +2,8 @@ import torch
 import time
 
 from abc import abstractmethod
-from logger import TensorboardWriter
-from utils import time_elapsed
+from logger.visualization import TensorboardWriter
+from utils.util import time_elapsed
 
 
 class BaseTester:

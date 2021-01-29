@@ -1,7 +1,7 @@
 import numpy as np
 
 from torchvision.utils import make_grid
-from base_trainer import BaseTrainer
+from .base_trainer import BaseTrainer
 from utils.util import inf_loop, MetricTracker
 from tqdm import tqdm
 from tester.MNIST_tester import MNISTTester

@@ -96,12 +96,12 @@
 #
 # from torchtext.data.utils import get_tokenizer
 # from data_loader.data_loaders import BREAKDataLoader
-from data_loader.custom_datasets import BREAKLogical
-
-# print("starting")
-# en_tokenizer = get_tokenizer('spacy', language='en_core_web_sm')
-# # break_dataloader = BREAKDataLoader('data/', 1, True, 0, 1)
-training = BREAKLogical('data/', train=True, valid=False)
+# from data_loader.custom_datasets import BREAKLogical
+#
+# # print("starting")
+# # en_tokenizer = get_tokenizer('spacy', language='en_core_web_sm')
+# # # break_dataloader = BREAKDataLoader('data/', 1, True, 0, 1)
+# training = BREAKLogical('data/', train=True, valid=False)
 # validation = BREAKLogical('data/', train=True, valid=True)
 # testing = BREAKLogical('data/', train=False, valid=False)
 # print(testing[50])
@@ -152,14 +152,40 @@ training = BREAKLogical('data/', train=True, valid=False)
 # for i, it in enumerate(torch.transpose(a,0, 1)):
 #     print(i, it)
 
-from tester.BREAK_evaluate_predictions import evaluate, get_exact_match
-ids = []
-questions = []
-decomps = []
-golds = []
-metadata = []
-output_path = ""
-
-id, question, gold = training[0]
-print(evaluate([id], [question], [gold], [gold], None, 'saved'))
+# from tester.BREAK_evaluate_predictions import evaluate, get_exact_match
+# ids = []
+# questions = []
+# decomps = []
+# golds = []
+# metadata = []
+# output_path = ""
+#
+# id, question, gold = training[0]
+# print(evaluate([id], [question], [gold], [gold], None, 'saved'))
 # print(get_exact_match(training[0][1], training[0][1]))
+
+
+import torch
+import numpy as np
+
+eos_id = 3
+a = torch.tensor([[1, 3, 3, 4], [1, 1, 1, 1], [1, 2, 3, 3]])
+
+# non zero values mask
+eos_mask = a == eos_id
+# operations on the mask to find first non_eos values in the rows
+mask_max_values, mask_max_indices = torch.max(eos_mask, dim=1)
+mask_max_indices[mask_max_values == 0] = a.shape[1]
+mask = torch.ones(a.shape)
+for i in range(mask.shape[0]):
+    mask[i][mask_max_indices[i]:] = 0
+# a.gather(1, mask_max_indices.unsqueeze(1))
+
+# mask[0][4:] =3
+print(mask)
+
+# a= [1,2,3,4]
+# b =[1,2,3,3]
+# c = sum([x==y for x,y in zip(a,b)])
+# d = np.array(c).sum()
+# print(c)

@@ -40,7 +40,7 @@
     },
     "loss": "CrossEntropyLoss",
     "metrics": [
-        "accuracy_qdmr"
+        "exact_match", "sari_score", "match_ratio", "structural_match_ratio", "ged_score"
     ],
     "lr_scheduler": {
         "type": "StepLR",
@@ -56,19 +56,19 @@
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 1,
-        "monitor": "max val_accuracy_qdmr",
+        "monitor": "max ged_score",
         "early_stop": 10,
         "tensorboard": true,
-        "best_metrics_log": "epoch loss accuracy_qdmr val_loss val_accuracy_qdmr"
+        "best_metrics_log": "epoch loss exact_match sari_score match_ratio structural_match_ratio ged_score val_loss val_exact_match val_sari_score val_match_ratio val_structural_match_ratio val_ged_score"
     },
     "tester": {
         "module" : "tester.BREAK_tester",
         "type": "Seq2SeqSimpleTester",
         "verbosity": 1,
-        "metrics_log": "loss accuracy_qdmr",
+        "metrics_log": "loss exact_match sari_score match_ratio structural_match_ratio ged_score",
         "tensorboard": true
     },
     "constants" : {
-        "batch_size": 32
+        "batch_size": 8
     }
 }

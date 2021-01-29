@@ -1,4 +1,9 @@
 import torch
+import numpy as np
+from tester.BREAK_evaluation.sari_hook import get_sari
+from tester.BREAK_evaluation.sequence_matcher import SequenceMatchScorer
+from tester.BREAK_evaluation.graph_matcher import GraphMatchScorer
+from tester.BREAK_evaluation.decomposition import Decomposition
 
 
 # TODO bring all the metrics from the BREAK repo.
@@ -42,3 +47,40 @@ def top_k_acc(output, target, k=3):
         for i in range(k):
             correct += torch.sum(pred[:, i] == target).item()
     return correct / len(target)
+
+
+def exact_match(decompositions_str: [str], golds_str: [str], *args):
+    return sum([d.lower() == g.lower() for d, g in zip(decompositions_str, golds_str)]) / len(decompositions_str)
+
+
+def sari_score(decompositions_str: [str], golds_str: [str], questions: [str]):
+    sources = [q.split(" ") for q in questions]
+    predictions = [d.split(" ") for d in decompositions_str]
+    targets = [[g.split(" ")] for g in golds_str]
+    sari, keep, add, deletion = get_sari(sources, predictions, targets)
+    return np.average(sari)
+
+
+def match_ratio(decompositions_str: [str], golds_str: [str], *args):
+    sequence_scorer = SequenceMatchScorer(remove_stop_words=False)
+    scores = sequence_scorer.get_match_scores(decompositions_str, golds_str,
+                                            processing="base")
+    return np.average(scores)
+
+def structural_match_ratio(decompositions_str: [str], golds_str: [str], *args):
+    sequence_scorer = SequenceMatchScorer(remove_stop_words=False)
+    scores = sequence_scorer.get_match_scores(decompositions_str, golds_str,
+                                            processing="structural")
+    return np.average(scores)
+
+def ged_score(decompositions_str: [str], golds_str: [str], *args):
+    decompositions = [Decomposition.from_str(decomp) for decomp in decompositions_str]
+    golds = [Decomposition.from_str(g) for g in golds_str]
+
+    graph_scorer = GraphMatchScorer()
+    decomposition_graphs = [d.to_graph() for d in decompositions]
+    gold_graphs = [g.to_graph() for g in golds]
+
+    ged_scores = graph_scorer.get_edit_distance_match_scores(decomposition_graphs, gold_graphs)
+
+    return np.average(ged_scores)

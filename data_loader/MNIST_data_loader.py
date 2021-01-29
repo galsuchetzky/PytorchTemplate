@@ -1,5 +1,5 @@
 from torchvision import datasets, transforms
-from base_data_loader import BaseDataLoader
+from .base_data_loader import BaseDataLoader
 
 DEBUG_EXAMPLES_AMOUNT = 4000
 

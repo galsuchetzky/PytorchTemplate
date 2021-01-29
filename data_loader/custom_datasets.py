@@ -12,7 +12,7 @@ from utils.util import save_obj, load_obj
 from subprocess import run
 from tester.BREAK_evaluate_predictions import format_qdmr
 
-DEBUG_EXAMPLES_AMOUNT = 300
+DEBUG_EXAMPLES_AMOUNT = 50
 
 
 class BREAKLogical(data.Dataset):
@@ -97,7 +97,7 @@ class BREAKLogical(data.Dataset):
         :param idx: The index of the example to retrieve.
         :return: The retrieved example.
         """
-        example = (self.ids[idx], self.questions[idx], self.golds[idx])
+        example = (self.ids[idx], self.questions[idx], self.golds[idx].to_string())
         return example#[0], self.clean_qdmr(example[1])
 
     # def clean_qdmr(self, qdmr):
