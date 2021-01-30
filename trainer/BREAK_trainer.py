@@ -99,15 +99,16 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
 
                 self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
 
+                with torch.no_grad():
+                    pred = torch.argmax(output, dim=1)
+                    data_str = batch_to_str(self.vocab, data, mask_data)
+                    target_str = batch_to_str(self.vocab, target, mask_target)
+                    pred_str = pred_batch_to_str(self.vocab, pred)
+
                 # Update metrics
                 self.train_metrics.update('loss', loss.item())
-                for met in self.metric_ftns:
-                    with torch.no_grad():
-                        pred = torch.argmax(output, dim=1)
-                        data_str = batch_to_str(self.vocab, data, mask_data)
-                        target_str = batch_to_str(self.vocab, target, mask_target)
-                        pred_str = pred_batch_to_str(self.vocab, pred)
-                    self.train_metrics.update(met.__name__, met(pred_str, target_str, data_str))
+                # for met in self.metric_ftns:
+                #     self.train_metrics.update(met.__name__, met(pred_str, target_str, data_str))
 
                 # Log progress
                 if batch_idx % self.log_step == 0:
