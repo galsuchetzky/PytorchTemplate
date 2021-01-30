@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from .base_model import BaseModel
 
+
 # TODO documentation.
 class MnistModel(BaseModel):
     def __init__(self, device, num_classes=10):

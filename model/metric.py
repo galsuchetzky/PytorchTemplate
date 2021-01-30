@@ -64,14 +64,16 @@ def sari_score(decompositions_str: [str], golds_str: [str], questions: [str]):
 def match_ratio(decompositions_str: [str], golds_str: [str], *args):
     sequence_scorer = SequenceMatchScorer(remove_stop_words=False)
     scores = sequence_scorer.get_match_scores(decompositions_str, golds_str,
-                                            processing="base")
+                                              processing="base")
     return np.average(scores)
+
 
 def structural_match_ratio(decompositions_str: [str], golds_str: [str], *args):
     sequence_scorer = SequenceMatchScorer(remove_stop_words=False)
     scores = sequence_scorer.get_match_scores(decompositions_str, golds_str,
-                                            processing="structural")
+                                              processing="structural")
     return np.average(scores)
+
 
 def ged_score(decompositions_str: [str], golds_str: [str], *args):
     decompositions = [Decomposition.from_str(decomp) for decomp in decompositions_str]

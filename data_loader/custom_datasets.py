@@ -2,8 +2,6 @@ import torch.utils.data as data
 import numpy as np
 import spacy
 import logging
-import ast
-import re
 
 from logger.logger import setup_logging, LOGGER_SETUP
 from nlp import load_dataset
@@ -12,7 +10,7 @@ from utils.util import save_obj, load_obj
 from subprocess import run
 from tester.BREAK_evaluate_predictions import format_qdmr
 
-DEBUG_EXAMPLES_AMOUNT = 50
+DEBUG_EXAMPLES_AMOUNT = 10000
 
 
 class BREAKLogical(data.Dataset):
@@ -36,6 +34,7 @@ class BREAKLogical(data.Dataset):
         self.logger.setLevel(logging.INFO)
         self.logger.info("Preparing dataset")
         super(BREAKLogical, self).__init__()
+
         # Load dataset and lexicon
         self.dataset_type = 'test'
         if train:
@@ -58,7 +57,6 @@ class BREAKLogical(data.Dataset):
         self.ids = self.dataset_logical[self.dataset_type]['question_id']
         self.questions = self.dataset_logical[self.dataset_type]['question_text']
         self.golds = [format_qdmr(decomp) for decomp in self.dataset_logical[self.dataset_type]["decomposition"]]
-        # self.golds = self.dataset_logical[self.dataset_type]['decomposition']
         if debug:
             self.ids = self.ids[:DEBUG_EXAMPLES_AMOUNT]
             self.questions = self.questions[:DEBUG_EXAMPLES_AMOUNT]
@@ -100,15 +98,7 @@ class BREAKLogical(data.Dataset):
         :return: The retrieved example.
         """
         example = (self.ids[idx], self.questions[idx], self.golds[idx].to_string())
-        return example  # [0], self.clean_qdmr(example[1])
-
-    # def clean_qdmr(self, qdmr):
-    #     """
-    #     Removes the 'return' statement from the beginning of each qdmr entry.
-    #     :param qdmr: The qdmr to clean.
-    #     :return: The cleaned qdmr.
-    #     """
-    #     return qdmr.replace('return ', '')
+        return example
 
     def __len__(self):
         """

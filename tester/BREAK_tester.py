@@ -1,6 +1,8 @@
 import torch
-from tqdm import tqdm
+import random
+import time
 
+from tqdm import tqdm
 from .base_tester import BaseTester
 from utils.util import MetricTracker
 from data_loader.vocabs import batch_to_tensor, batch_to_str, pred_batch_to_str
@@ -18,7 +20,6 @@ class Seq2SeqSimpleTester(BaseTester):
     def __init__(self, model, criterion, metric_ftns, config, device,
                  data_loader, evaluation=True):
         """
-
         :param model: A model to test.
         :param criterion: we ignore this value and overwrite it
         :param metric_ftns: The names of the metric functions to use.
@@ -26,6 +27,8 @@ class Seq2SeqSimpleTester(BaseTester):
         :param device: The device to use for the testing.
         :param data_loader: The dataloader to use for loading the testing data.
         """
+        # TODO add logger and log "starting evaluation"
+
         self.vocab = model.vocab
         self.question_pad_length = config['data_loader']['question_pad_length']
         self.qdmr_pad_length = config['data_loader']['qdmr_pad_length']
@@ -45,19 +48,28 @@ class Seq2SeqSimpleTester(BaseTester):
         :param epoch: Integer, current training epoch.
         :return: A log that contains information about validation
         """
+        # Choose 2 random examples from the dev set and print their prediction.
+        batch_index1 = random.randint(0, len(self.data_loader) - 1) - 1
+        example_index1 = random.randint(0, self.data_loader.batch_size - 1)
+        batch_index2 = random.randint(0, len(self.data_loader) - 1) - 1
+        example_index2 = random.randint(0, self.data_loader.batch_size - 1)
+        questions = []
+        decompositions = []
+        targets = []
+
         # Sets the model to evaluation mode.
         self.valid_metrics.reset()
         with tqdm(total=len(self.data_loader)) as progbar:
             for batch_idx, (_, data, target) in enumerate(self.data_loader):
                 data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
                 target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
-
+                start = time.time()
                 # Run the model on the batch and calculate the loss
                 output = self.model(data, target, evaluation_mode=True)
                 output = torch.transpose(output, 1, 2)
                 pred = torch.argmax(output, dim=1)
                 loss = self.criterion(output, target)
-
+                start = time.time()
                 # Convert the predictions/ targets/questions from tensor of token_ids to list of strings.
                 data_str = batch_to_str(self.vocab, data, mask_data)
                 target_str = batch_to_str(self.vocab, target, mask_target)
@@ -67,18 +79,58 @@ class Seq2SeqSimpleTester(BaseTester):
                 for met in self.metric_ftns:
                     self.valid_metrics.update(met.__name__, met(pred_str, target_str, data_str))
 
+                # Print example for predictions.
+                if batch_idx == batch_index1:
+                    questions.append(data_str[example_index1])
+                    decompositions.append(pred_str[example_index1])
+                    targets.append(target_str[example_index1])
+
+                if batch_idx == batch_index2:
+                    questions.append(data_str[example_index2])
+                    decompositions.append(pred_str[example_index2])
+                    targets.append(target_str[example_index2])
+
                 # Update the progress bar.
                 progbar.update(1)
                 progbar.set_postfix(LOSS=loss.item(),
                                     batch_size=self.data_loader.init_kwargs['batch_size'],
                                     samples=self.data_loader.n_samples)
 
+        # Print example predictions.
+        for question, decomposition, target in zip(questions, decompositions, targets):
+            print('\ndecomposition example:')
+            print('question:\t\t', question)
+            print('decomposition:\t', decomposition)
+            print('target:\t\t\t', target)
+            print()
+
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():
             self.writer.add_histogram(name, p, bins='auto')
         return self.valid_metrics.result()
 
-    #TODO add predict function for submission. do not use target
+    # def print_first_example_scores(self, evaluation_dict, num_examples):
+    #     # TODO use this
+    #     for i in range(num_examples):
+    #         print("evaluating example #{}".format(i))
+    #         print("\tsource (question): {}".format(evaluation_dict["question"][i]))
+    #         print("\tprediction (decomposition): {}".format(evaluation_dict["prediction"][i]))
+    #         print("\ttarget (gold): {}".format(evaluation_dict["gold"][i]))
+    #         print("\texact match: {}".format(round(evaluation_dict["exact_match"][i], 3)))
+    #         print("\tmatch score: {}".format(round(evaluation_dict["match"][i], 3)))
+    #         print("\tstructural match score: {}".format(round(evaluation_dict["structural_match"][i], 3)))
+    #         print("\tsari score: {}".format(round(evaluation_dict["sari"][i], 3)))
+    #         print("\tGED score: {}".format(
+    #             round(evaluation_dict["ged"][i], 3) if evaluation_dict["ged"][i] is not None
+    #             else '-'))
+    #         print("\tstructural GED score: {}".format(
+    #             round(evaluation_dict["structural_ged"][i], 3) if evaluation_dict["structural_ged"][i] is not None
+    #             else '-'))
+    #         print("\tGED+ score: {}".format(
+    #             round(evaluation_dict["ged_plus"][i], 3) if evaluation_dict["ged_plus"][i] is not None
+    #             else '-'))
+
+    # TODO add predict function for submission. do not use target
 
     # def batch_evaluate(self, questions, decompositions, golds, metadata,
     #                    output_path_base, num_processes):
