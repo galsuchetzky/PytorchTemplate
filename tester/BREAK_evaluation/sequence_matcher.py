@@ -48,7 +48,7 @@ class SequenceMatchScorer(object):
         scores = []
 
         num_examples = len(predictions)
-        for i in tqdm(range(num_examples)):
+        for i in range(num_examples):
             score = self.get_match_score(predictions[i], targets[i], processing)
             scores.append(score)
 
