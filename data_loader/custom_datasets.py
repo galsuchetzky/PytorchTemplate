@@ -60,6 +60,7 @@ class BREAKLogical(data.Dataset):
         self.golds = [format_qdmr(decomp) for decomp in self.dataset_logical[self.dataset_type]["decomposition"]]
         # self.golds = self.dataset_logical[self.dataset_type]['decomposition']
         if debug:
+            self.ids = self.ids[:DEBUG_EXAMPLES_AMOUNT]
             self.questions = self.questions[:DEBUG_EXAMPLES_AMOUNT]
             self.golds = self.golds[:DEBUG_EXAMPLES_AMOUNT]
 

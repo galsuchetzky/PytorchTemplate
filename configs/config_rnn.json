@@ -56,10 +56,10 @@
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 1,
-        "monitor": "max ged_score",
+        "monitor": "max val_ged_score",
         "early_stop": 10,
         "tensorboard": true,
-        "best_metrics_log": "epoch loss exact_match sari_score match_ratio structural_match_ratio ged_score val_loss val_exact_match val_sari_score val_match_ratio val_structural_match_ratio val_ged_score"
+        "best_metrics_log": "epoch loss val_loss val_exact_match val_sari_score val_match_ratio val_structural_match_ratio val_ged_score"
     },
     "tester": {
         "module" : "tester.BREAK_tester",
@@ -69,6 +69,6 @@
         "tensorboard": true
     },
     "constants" : {
-        "batch_size": 32
+        "batch_size": 8
     }
 }
