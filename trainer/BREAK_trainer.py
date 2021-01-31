@@ -15,13 +15,14 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
     Trainer for a simple seq2seq mode.
     """
 
-    def __init__(self, model, criterion, metric_ftns, optimizer, config, device,
+    def __init__(self, model, criterion, train_metric_ftns, eval_metric_fns, optimizer, config, device,
                  data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
         """
 
         :param model:
         :param criterion: we ignore this value and overwrite it
-        :param metric_ftns:
+        :param train_metric_ftns:
+        :param eval_metric_fns:
         :param optimizer:
         :param config:
         :param device:
@@ -37,7 +38,8 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         self.criterion = CrossEntropyLoss(ignore_index=self.pad_idx)
         super().__init__(model,
                          self.criterion,
-                         metric_ftns,
+                         train_metric_ftns,
+                         eval_metric_fns,
                          optimizer,
                          config,
                          device,
@@ -58,12 +60,12 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         self.do_validation = self.valid_data_loader is not None
         self.log_step = int(np.sqrt(data_loader.batch_size))
 
-        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.train_metric_ftns], writer=self.writer)
 
         # Define evaluator.
         self.evaluator = Seq2SeqSimpleTester(self.model,
                                              self.criterion,
-                                             self.metric_ftns,
+                                             self.eval_metric_ftns,
                                              self.config,
                                              self.device,
                                              self.valid_data_loader)

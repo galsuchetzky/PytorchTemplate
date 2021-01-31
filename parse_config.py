@@ -80,7 +80,6 @@ class ConfigParser:
             cfg_fname = Path(args.config)
 
         config = read_json(cfg_fname)
-        ConfigParser.resolve_constants(config)
         if args.config and resume:
             # update new config for fine-tuning
             config.update(read_json(args.config))
@@ -89,6 +88,9 @@ class ConfigParser:
 
         # parse custom cli options into dictionary
         modification = {opt.target: getattr(args, _get_opt_name(opt.flags)) for opt in options}
+
+        ConfigParser.resolve_constants(config)
+
         return cls(config, resume, modification)
 
     @classmethod

@@ -10,7 +10,7 @@ from utils.util import save_obj, load_obj
 from subprocess import run
 from tester.BREAK_evaluate_predictions import format_qdmr
 
-DEBUG_EXAMPLES_AMOUNT = 10000
+DEBUG_EXAMPLES_AMOUNT = 100
 
 
 class BREAKLogical(data.Dataset):

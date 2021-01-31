@@ -39,9 +39,11 @@
         }
     },
     "loss": "CrossEntropyLoss",
-    "metrics": [
-        "exact_match", "sari_score", "structural_match_ratio"
-    ],
+    "metrics": {
+        "train_metrics": ["exact_match", "sari_score"],
+        "eval_metrics": ["exact_match", "sari_score", "structural_match_ratio"],
+        "test_metrics": ["exact_match", "sari_score", "structural_match_ratio"]
+    },
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
@@ -52,20 +54,19 @@
     "trainer": {
         "module" : "trainer.BREAK_trainer",
         "type": "Seq2SeqSimpleTrainer",
-        "epochs": 4,
+        "epochs": 10,
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 1,
-        "monitor": "max val_ged_score",
+        "monitor": "max val_sari_score",
         "early_stop": 10,
         "tensorboard": true,
-        "best_metrics_log": "epoch loss val_loss val_exact_match val_sari_score val_structural_match_ratio"
+        "best_model_metrics_log": "epoch loss val_loss val_exact_match val_sari_score val_structural_match_ratio"
     },
     "tester": {
         "module" : "tester.BREAK_tester",
         "type": "Seq2SeqSimpleTester",
         "verbosity": 1,
-        "metrics_log": "loss exact_match sari_score match_ratio structural_match_ratio ged_score",
         "tensorboard": true
     },
     "debug": {

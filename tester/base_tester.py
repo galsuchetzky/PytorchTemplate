@@ -36,9 +36,6 @@ class BaseTester:
         # Get testing configurations
         cfg_tester = config['tester']
 
-        # Metrics to display for the model.
-        self.metrics_log = cfg_tester['metrics_log'].split()
-
         # setup visualization writer instance
         self.writer = TensorboardWriter(config.log_dir, self.logger, cfg_tester['tensorboard'])
 

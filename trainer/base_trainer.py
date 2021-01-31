@@ -13,13 +13,14 @@ class BaseTrainer:
     Handles the training loop, logging, saving checkpoints, timings and presenting the training results.
     """
 
-    def __init__(self, model, criterion, metric_ftns, optimizer, config, device, data_loader, valid_data_loader, \
-                 lr_scheduler):
+    def __init__(self, model, criterion, train_metric_ftns, eval_metric_ftns, optimizer, config, device, data_loader,
+                 valid_data_loader, lr_scheduler):
         """
         Initiates the Base trainer.
         :param model:               The model to train.
         :param criterion:           The loss function.
-        :param metric_ftns:          The metrics on which the model will be evaluated during evaluation or train time.
+        :param train_metric_ftns:   The metrics on which the model will be evaluated during evaluation or train time.
+        :param eval_metric_ftns:    The metrics on which the model will be evaluated during evaluation or train time.
         :param optimizer:           The optimizer to use for optimizing the parameters of the model.
         :param config:              Configuration file.
         :param device:              The device to use for computations.
@@ -32,7 +33,8 @@ class BaseTrainer:
 
         self.model = model
         self.criterion = criterion
-        self.metric_ftns = metric_ftns
+        self.train_metric_ftns = train_metric_ftns
+        self.eval_metric_ftns = eval_metric_ftns
         self.optimizer = optimizer
         self.device = device
         self.data_loader = data_loader
@@ -43,7 +45,7 @@ class BaseTrainer:
         cfg_trainer = config['trainer']
 
         # Metrics to display for the best model.
-        self.best_model_metrics_log = cfg_trainer['best_metrics_log'].split()
+        self.best_model_metrics_log = cfg_trainer['best_model_metrics_log'].split()
         self.epochs = cfg_trainer['epochs']
         self.save_period = cfg_trainer['save_period']  # Once in how many epochs to save the models parameters.
 
@@ -70,6 +72,7 @@ class BaseTrainer:
         self.start_epoch = 1
 
         self.checkpoint_dir = config.save_dir
+        print(self.checkpoint_dir)
 
         # setup visualization writer instance                
         self.writer = TensorboardWriter(config.log_dir, self.logger, cfg_trainer['tensorboard'])

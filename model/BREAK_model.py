@@ -138,6 +138,7 @@ class EncoderDecoder(BaseBREAKModel):
         super().__init__(device)
 
         self.batch_size = batch_size
+        print(batch_size)
         self.enc_input_size = enc_input_size
         self.dec_input_size = dec_input_size
         self.enc_hidden_size = enc_hidden_size
