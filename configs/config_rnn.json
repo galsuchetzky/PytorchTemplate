@@ -40,7 +40,7 @@
     },
     "loss": "CrossEntropyLoss",
     "metrics": {
-        "train_metrics": ["exact_match", "sari_score"],
+        "train_metrics": [],
         "eval_metrics": ["exact_match", "sari_score", "structural_match_ratio"],
         "test_metrics": ["exact_match", "sari_score", "structural_match_ratio"]
     },

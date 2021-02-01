@@ -8,12 +8,15 @@ from data_loader.vocabs import batch_to_tensor, batch_to_str, pred_batch_to_str
 
 def main(config):
     # prepare for (multi-device) GPU training
-    device, device_ids = prepare_device(config['n_gpu'])
+    device, _ = prepare_device(config['n_gpu'])
     print(f"Working on device: {device}")
 
     # build model architecture, then print to console
     config['arch']['args']['device'] = device  # Add the device to the config.
     model = config.init_obj('arch')
+
+    # Move model to device.
+    model = model.to(device)
     print(model)
 
     assert config.resume is not None, 'resume model should be provided'
@@ -30,15 +33,17 @@ def main(config):
     while True:
         question = input('question: ')
         # TODO change this to "predict" function
-        questions = [[question]] + [['']] * (batch_size - 1)
+        questions = [question] + [''] * (batch_size - 1)
         data, mask_data = batch_to_tensor(model.vocab, questions, question_pad_length, device)
 
-        targets = [['']] * batch_size
+        targets = [''] * batch_size
         target, mask_target = batch_to_tensor(model.vocab, targets, qdmr_pad_length, device)
 
-        output = model(data, target)
+        output = model(data, target, evaluation_mode=True)
+        output = torch.transpose(output, 1, 2)
+        pred = torch.argmax(output, dim=1)
 
-        decomposition = pred_batch_to_str(model.vocab, output)[0]
+        decomposition = pred_batch_to_str(model.vocab, pred)[0]
 
         print('decomposition:\t', decomposition)
 
