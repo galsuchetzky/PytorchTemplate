@@ -166,25 +166,33 @@
 
 import torch
 import numpy as np
-
-eos_id = 3
-a = torch.tensor([[1, 3, 3, 4], [1, 1, 1, 1], [1, 2, 3, 3]])
-
-# non zero values mask
-eos_mask = a == eos_id
-# operations on the mask to find first non_eos values in the rows
-mask_max_values, mask_max_indices = torch.max(eos_mask, dim=1)
-mask_max_indices[mask_max_values == 0] = a.shape[1]
-mask = torch.ones(a.shape)
-for i in range(mask.shape[0]):
-    mask[i][mask_max_indices[i]:] = 0
-# a.gather(1, mask_max_indices.unsqueeze(1))
-
-# mask[0][4:] =3
-print(mask)
+#
+# eos_id = 3
+# a = torch.tensor([[1, 3, 3, 4], [1, 1, 1, 1], [1, 2, 3, 3]])
+#
+# # non zero values mask
+# eos_mask = a == eos_id
+# # operations on the mask to find first non_eos values in the rows
+# mask_max_values, mask_max_indices = torch.max(eos_mask, dim=1)
+# mask_max_indices[mask_max_values == 0] = a.shape[1]
+# mask = torch.ones(a.shape)
+# for i in range(mask.shape[0]):
+#     mask[i][mask_max_indices[i]:] = 0
+# # a.gather(1, mask_max_indices.unsqueeze(1))
+#
+# # mask[0][4:] =3
+# print(mask)
 
 # a= [1,2,3,4]
 # b =[1,2,3,3]
 # c = sum([x==y for x,y in zip(a,b)])
 # d = np.array(c).sum()
 # print(c)
+
+
+a = {1:["a", "b"], 2:["c"], 3:[]}
+# c = []
+# for lst in a.values():
+#     c.extend(lst)
+c = [single_value for val_list in a.values() for single_value in val_list]
+print(c)

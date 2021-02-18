@@ -33,6 +33,48 @@ def BREAK_vocab_simple():
     return vocab
 
 
+def BREAK_vocab_logical():
+    # operators = ["select", "filter", "project", "aggregate",
+    #              "group", "superlative", "comparative",
+    #              "union", "intersection", "discard",
+    #              "sort", "boolean", "arithmetic",
+    #              "comparison"]
+    phrases_by_operators = {
+        "select": [],
+        "filter": [],
+        "project": [],
+        "aggregate": ["max", "min", "count", "sum", "avg"],
+        "group": ["max", "min", "count", "sum", "avg"],
+        "superlative": ["argmax", "argmin"],
+        "comparative": ["smaller", "smaller or equal to", "bigger", "bigger or equal to", "equal", "not equal"],
+        "union": [],
+        "intersection": [],
+        "discard": [],
+        "sort": [],
+        "boolean": ["if", "is"],
+        "arithmetic": ["addition", "difference", "multiplication", "division"]
+
+    }
+    operators = list(phrases_by_operators.keys())
+    phrases = [phrase for phrase_list in phrases_by_operators.values() for phrase in phrase_list]
+
+    specials = ['<unk>', '<sos>', '<pad>', '<eos>', '@@SEP@@', '@@10@@', '@@11@@', '@@12@@', '@@13@@',
+                '@@14@@', '@@15@@', '@@16@@', '@@17@@', '@@18@@', '@@19@@', '@@1@@',
+                '@@2@@', '@@3@@', '@@4@@', '@@5@@', '@@6@@', '@@7@@', '@@8@@', '@@9@@']
+    specials.extend(phrases)
+    specials.extend(operators)
+
+    # Load the dataset and get the words.
+    # TODO The dictionary as for now is only created from the training data. maybe change that.
+    current_dir = Path()
+    dir_path = current_dir / "data" / "break_data" / "vocabs"
+    file_name = "vocab_logical.pkl"
+    sents = BREAKLogical.load_dataset(dir_path, 'logical-forms')['train']['question_text']
+    vocab = build_vocab(specials, dir_path, file_name, sents, en_tokenizer)
+    return vocab
+
+
+
 def build_vocab(specials, dir_path, file_name, sents, tokenizer):
     """
     Builds a vocabulary from the questions of the split.
@@ -126,6 +168,7 @@ def batch_to_str(vocab, batch, mask):
         mask_row = mask_row == 1
         lst.append(tensor_to_str(vocab, torch.masked_select(data_row, mask_row)))
     return lst
+
 
 def pred_batch_to_str(vocab, pred):
     """
