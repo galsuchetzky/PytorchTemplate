@@ -1,6 +1,7 @@
 import torch
 import random
 import time
+import pandas as pd
 
 from tqdm import tqdm
 from .base_tester import BaseTester
@@ -44,6 +45,7 @@ class Seq2SeqSimpleTester(BaseTester):
     def _evaluate(self):
         """
         Validate after training an epoch.
+        Used with  gold target
 
         :param epoch: Integer, current training epoch.
         :return: A log that contains information about validation
@@ -104,6 +106,60 @@ class Seq2SeqSimpleTester(BaseTester):
             print('decomposition:\t', decomposition)
             print('target:\t\t\t', target)
             print()
+
+        # add histogram of model parameters to the tensorboard
+        for name, p in self.model.named_parameters():
+            self.writer.add_histogram(name, p, bins='auto')
+        return self.valid_metrics.result()
+
+
+    def _predict_without_target(self):
+        """
+        get model predictions for testing.
+        Used without targets
+
+        :return: A log that contains information about predictions
+        """
+        qid_col = []
+        pred_col = []
+        question_col = []
+
+        # Sets the model to evaluation mode.
+        self.valid_metrics.reset()
+        with tqdm(total=len(self.data_loader)) as progbar:
+            for batch_idx, (question_ids, data, target) in enumerate(self.data_loader):
+                data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
+                target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
+                start = time.time()
+                # Run the model on the batch and calculate the loss
+                output = self.model(data, target, evaluation_mode=True)
+                output = torch.transpose(output, 1, 2)
+                pred = torch.argmax(output, dim=1)
+                loss = self.criterion(output, target)
+                start = time.time()
+                # Convert the predictions/ targets/questions from tensor of token_ids to list of strings.
+                # TODO do we need to convert here or can we use the originals? (for data and target)
+                data_str = batch_to_str(self.vocab, data, mask_data)
+                target_str = batch_to_str(self.vocab, target, mask_target)
+                pred_str = pred_batch_to_str(self.vocab, pred)
+                for i, question_id in enumerate(question_ids):
+                    self.logger.info('{}:{}'.format(question_id, data_str[i]))
+                qid_col.extend(question_ids)
+                pred_col.extend(pred_str)
+                question_col.extend(data_str)
+
+                self.valid_metrics.update('loss', loss.item())
+                for met in self.metric_ftns:
+                    self.valid_metrics.update(met.__name__, met(pred_str, target_str, data_str))
+
+                # Update the progress bar.
+                progbar.update(1)
+                progbar.set_postfix(LOSS=loss.item(),
+                                    batch_size=self.data_loader.init_kwargs['batch_size'],
+                                    samples=self.data_loader.n_samples)
+        d = {'question_id': qid_col, 'question_text': question_col, 'decomposition': pred_col}
+        programs_df = pd.DataFrame(data=d)
+        programs_df.to_csv(self.predictions_file_name, index=False, encoding='utf-8')
 
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():

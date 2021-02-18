@@ -28,9 +28,9 @@ LEXICON = load_dataset('break_data', 'QDMR-lexicon', cache_dir='.\\data\\')
 LOGICAL = load_dataset('break_data', 'logical-forms', cache_dir='.\\data\\')
 # for t in s:
 # 	print(t, s[t])
-# print("QDMR len of train", len(QDMR['train']),"************")
-# for p in QDMR['train'][70]:
-# 	print(p, QDMR['train'][70][p])
+print("QDMR len of train", len(QDMR['test']),"************")
+for p in QDMR['test'][1]:
+	print(p, QDMR['test'][1][p])
 # print("------------------------------------")
 # print("LEXICON len of train", len(LEXICON['train']), "************")
 
@@ -56,49 +56,49 @@ start = time.time()
 # 			break
 
 
-lexicon_dict = {'train': dict(), 'validation': dict(), 'test': dict()}
-lexicon_check = {'train': dict(), 'validation': dict(), 'test': dict()}
-for data_split in LOGICAL:
-    lex_idx = 0
-    lexicon_split = LEXICON[data_split]
-    for i, logic_example in enumerate(LOGICAL[data_split]):
-        ques = logic_example['question_text']
-        for j in range(lex_idx, len(lexicon_split)):
-            lexicon_example = lexicon_split[j]
-            if lexicon_example['source'] == ques:
-                lexicon_dict[data_split][i] = lexicon_example['allowed_tokens']
-                lexicon_check[data_split][i] = lexicon_example['source']
-                lex_idx = j + 1
-                break
-
-index_check = 6234
-data_split = 'validation'
-print("took ", time.time() - start, "sec")
-for k in lexicon_check:
-    print(k)
+# lexicon_dict = {'train': dict(), 'validation': dict(), 'test': dict()}
+# lexicon_check = {'train': dict(), 'validation': dict(), 'test': dict()}
+# for data_split in LOGICAL:
+#     lex_idx = 0
+#     lexicon_split = LEXICON[data_split]
+#     for i, logic_example in enumerate(LOGICAL[data_split]):
+#         ques = logic_example['question_text']
+#         for j in range(lex_idx, len(lexicon_split)):
+#             lexicon_example = lexicon_split[j]
+#             if lexicon_example['source'] == ques:
+#                 lexicon_dict[data_split][i] = lexicon_example['allowed_tokens']
+#                 lexicon_check[data_split][i] = lexicon_example['source']
+#                 lex_idx = j + 1
+#                 break
+#
+# index_check = 6234
+# data_split = 'validation'
+# print("took ", time.time() - start, "sec")
+# for k in lexicon_check:
+#     print(k)
 # print("check len", len(lexicon_check['train']), "************")
 # print("train_map len", len(lexicon_dict['train']), "************")
 #
 # # for p in train_check[200]:
 # print(train_check[index_check])
-print("true logic", LOGICAL[data_split][index_check]['question_text'])
-print("lexicon check", lexicon_check[data_split][index_check])
-print("lexicon dict", lexicon_dict[data_split][index_check])
-#
+# print("true logic", LOGICAL[data_split][index_check]['question_text'])
+# print("lexicon check", lexicon_check[data_split][index_check])
+# print("lexicon dict", lexicon_dict[data_split][index_check])
+# #
 # print("------------------------------------")
 # print("LOGICAL len of train", len(LOGICAL['train']),"************")
 # for p in LOGICAL['train'][index_check]:
 # 	print(p, LOGICAL['train'][index_check][p])
 
-current_dir = Path()
-dir_lexicon = current_dir / "data" / "break_data" / "lexicon_by_logical"
+# current_dir = Path()
+# dir_lexicon = current_dir / "data" / "break_data" / "lexicon_by_logical"
 
 # write_json(train_map, file_lexicon)
 # data = read_json(file_lexicon)
-save_obj(dir_lexicon, lexicon_dict, 'test1')
-data = load_obj(dir_lexicon, 'test1')
-print("result after load---------------")
-print(data[data_split][index_check])
+# save_obj(dir_lexicon, lexicon_dict, 'test1')
+# data = load_obj(dir_lexicon, 'test1')
+# print("result after load---------------")
+# print(data[data_split][index_check])
 
 # GAL's code
 # lex_train = {}

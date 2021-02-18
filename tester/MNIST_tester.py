@@ -34,6 +34,7 @@ class MNISTTester(BaseTester):
     def _evaluate(self):
         """
         Validate after training an epoch.
+        Used with  gold target
 
         :param epoch: Integer, current training epoch.
         :return: A log that contains information about validation
@@ -62,3 +63,6 @@ class MNISTTester(BaseTester):
         for name, p in self.model.named_parameters():
             self.writer.add_histogram(name, p, bins='auto')
         return self.valid_metrics.result()
+
+    def _predict_without_target(self):
+        return self._evaluate()

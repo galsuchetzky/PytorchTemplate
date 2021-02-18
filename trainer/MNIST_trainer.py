@@ -35,13 +35,13 @@ class MNISTTrainer(BaseTrainer):
         self.log_step = int(np.sqrt(data_loader.batch_size))
 
         self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
-        # Define evaluator.
+        # Define evaluator
         self.evaluator = MNISTTester(self.model,
                                      self.criterion,
                                      self.metric_ftns,
                                      self.config,
                                      self.device,
-                                     self.valid_data_loader)
+                                     self.valid_data_loader, True)
 
     def _train_epoch(self, epoch):
         """

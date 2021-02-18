@@ -23,10 +23,14 @@ class BREAKDataLoader(BaseDataLoader):
         self.data_dir = data_dir
         self.dataset = custom_datasets.BREAKLogical(self.data_dir, train=training, valid=False, debug=debug)
         self.dataset_type = self.dataset.get_dataset_type()
+        if self.dataset_type == 'test':
+            self.shuffle = False
+        else:
+            self.shuffle = shuffle
         self.validation_split = 0.0  # make sure to use all data
         self.drop_last = True
         self.debug = debug
-        super().__init__(self.dataset, batch_size, shuffle, self.validation_split, num_workers,
+        super().__init__(self.dataset, batch_size, self.shuffle, self.validation_split, num_workers,
                          drop_last=self.drop_last)
 
     def split_validation(self):

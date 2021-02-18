@@ -27,9 +27,11 @@
         }
     },
     "loss": "nll_loss",
-    "metrics": [
-        "accuracy_MNIST", "top_k_acc"
-    ],
+    "metrics": {
+        "train_metrics": ["accuracy_MNIST", "top_k_acc"],
+        "eval_metrics": ["accuracy_MNIST", "top_k_acc"],
+        "test_metrics": ["accuracy_MNIST", "top_k_acc"]
+    },
     "lr_scheduler": {
         "type": "StepLR",
         "args": {

@@ -16,6 +16,8 @@ if __name__ == '__main__':
                       help='path to latest checkpoint (default: None)')
     args.add_argument('-d', '--device', default=None, type=str,
                       help='indices of GPUs to enable (default: all)')
+    args.add_argument('-db', '--debug', default=False,
+                      help='add this argument to use a small subset of the dataset, for debugging.')
 
     config = ConfigParser.from_args(args)
     main(config)

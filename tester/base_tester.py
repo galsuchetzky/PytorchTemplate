@@ -25,6 +25,7 @@ class BaseTester:
         """
         self.config = config
         self.logger = config.get_logger('tester', config['tester']['verbosity'])
+        self.predictions_file_name = config.get_predictions_file_name()
 
         self.model = model
         self.criterion = criterion
@@ -43,13 +44,13 @@ class BaseTester:
     def _evaluate(self):
         """
         Evaluation logic for a specific model.
-        Can be used for evaluation or testing.
+        Used with  gold target
         """
         raise NotImplementedError
 
     def test(self):
         """
-        Common testing operations.
+        Evaluate using target
         """
         # Log start and set timer for timing the train.
         # TODO uncomment this (find solution for MNIST)
@@ -60,9 +61,10 @@ class BaseTester:
         self.model.eval()
 
         with torch.no_grad():
-
-            result = self._evaluate()
-
+            if self.evaluation:
+                result = self._evaluate()
+            else:
+                result = self._predict_without_target()
             # save logged information into log dict.
             log = {}
             log.update(result)

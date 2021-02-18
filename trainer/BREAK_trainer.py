@@ -68,7 +68,7 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
                                              self.eval_metric_ftns,
                                              self.config,
                                              self.device,
-                                             self.valid_data_loader)
+                                             self.valid_data_loader, True)
 
     def _train_epoch(self, epoch):
         """
