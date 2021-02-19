@@ -86,3 +86,15 @@ def ged_score(decompositions_str: [str], golds_str: [str], *args):
     ged_scores = graph_scorer.get_edit_distance_match_scores(decomposition_graphs, gold_graphs)
 
     return np.average(ged_scores)
+
+def ged_score_decomp(decompositions, golds, *args):
+    # decompositions = [Decomposition.from_str(decomp) for decomp in decompositions_str]
+    # golds = [Decomposition.from_str(g) for g in golds_str]
+
+    graph_scorer = GraphMatchScorer()
+    decomposition_graphs = [d.to_graph() for d in decompositions]
+    gold_graphs = [g.to_graph() for g in golds]
+
+    ged_scores = graph_scorer.get_edit_distance_match_scores(decomposition_graphs, gold_graphs)
+
+    return np.average(ged_scores)

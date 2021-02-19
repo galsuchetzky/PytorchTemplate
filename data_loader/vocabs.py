@@ -53,8 +53,8 @@ def BREAK_vocab_logical():
         "sort": [],
         "boolean": ["if", "is"],
         "arithmetic": ["addition", "difference", "multiplication", "division"]
-
     }
+
     operators = list(phrases_by_operators.keys())
     phrases = [phrase for phrase_list in phrases_by_operators.values() for phrase in phrase_list]
 
@@ -63,6 +63,14 @@ def BREAK_vocab_logical():
                 '@@2@@', '@@3@@', '@@4@@', '@@5@@', '@@6@@', '@@7@@', '@@8@@', '@@9@@']
     specials.extend(phrases)
     specials.extend(operators)
+
+    # model should learn that after BOS or '@@SEP@@' it should predict operators
+    # otherwise, it should predict phrase or other words or '@@SEP@@'
+    # improvement- different models for each operator
+
+    # gold should be qdmr2program ["SELECT['H. V. Jagadish']", "PROJECT['papers of #REF', '#1']", "FILTER['#2', 'that are on PVLDB']", "PROJECT['citations of #REF', '#3']", "GROUP['count', '#4', '#3']", "COMPARATIVE['#3', '#5', 'is higher than 200']"]
+    # SELECT @@ARGS@@ H. V. Jagadish @@SEP@@ PROJECT @@ARGS@@ papers of #REF @@ARGS_SEP@@ #1
+    # seq2seq over programs
 
     # Load the dataset and get the words.
     # TODO The dictionary as for now is only created from the training data. maybe change that.

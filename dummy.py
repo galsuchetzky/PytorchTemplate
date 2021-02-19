@@ -190,9 +190,19 @@ import numpy as np
 # print(c)
 
 
-a = {1:["a", "b"], 2:["c"], 3:[]}
-# c = []
-# for lst in a.values():
-#     c.extend(lst)
-c = [single_value for val_list in a.values() for single_value in val_list]
-print(c)
+from model.metric import ged_score_decomp
+from tester.BREAK_evaluate_predictions import format_qdmr
+gold_str = [
+    'return H. V. Jagadish ;return papers of #1 ;return #2 that  are on PVLDB ;return citations of #3 ;return number '
+    'of  #4 for each #3 ;return #3 where #5 is  higher than 200']
+
+pred_str = [
+    'return H. V. Jagadish']
+
+gold = [format_qdmr(decomp) for decomp in gold_str]
+pred = [format_qdmr(decomp) for decomp in pred_str]
+print(ged_score_decomp(pred, gold))
+
+# convert gold_qdmrs to logical_forms
+# convert logical forms to prediction_forms (argsep, usage of phrases)
+# build SARI metric (based of strings) over prediction_forms
