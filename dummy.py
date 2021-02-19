@@ -192,17 +192,28 @@ import numpy as np
 
 from model.metric import ged_score_decomp
 from tester.BREAK_evaluate_predictions import format_qdmr
-gold_str = [
-    'return H. V. Jagadish ;return papers of #1 ;return #2 that  are on PVLDB ;return citations of #3 ;return number '
-    'of  #4 for each #3 ;return #3 where #5 is  higher than 200']
+from utils.qdmr_identifier import *
 
-pred_str = [
-    'return H. V. Jagadish']
+# gold_str = [
+#     'return H. V. Jagadish ;return papers of #1 ;return #2 that  are on PVLDB ;return citations of #3 ;return number '
+#     'of  #4 for each #3 ;return #3 where #5 is  higher than 200']
+#
+# pred_str = [
+#     'return H. V. Jagadish']
 
-gold = [format_qdmr(decomp) for decomp in gold_str]
-pred = [format_qdmr(decomp) for decomp in pred_str]
-print(ged_score_decomp(pred, gold))
+# gold = [format_qdmr(decomp) for decomp in gold_str]
+# pred = [format_qdmr(decomp) for decomp in pred_str]
 
+
+qdmr = "return H. V. Jagadish ;return papers of #1 ;return #2 that  are on PVLDB ;return citations of #3 ;return number of  #4 for each #3 ;return #3 where #5 is  higher than 200"
+print("* Original QDMR: \n%s\n" % qdmr)
+builder = QDMRProgramBuilder(qdmr)
+builder.build()
+print("* Identified steps: \n%a\n" % str(builder))
+# steps = [str(step) for step in builder.steps]
+# print("* Identified steps: \n%a\n" % steps)
+ops = [str(op) for op in builder.operators]
+print("* Identified operators: \n%a\n" % ops)
 # convert gold_qdmrs to logical_forms
 # convert logical forms to prediction_forms (argsep, usage of phrases)
 # build SARI metric (based of strings) over prediction_forms

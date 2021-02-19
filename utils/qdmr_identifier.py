@@ -36,8 +36,12 @@ class QDMRStep:
         self.arguments = arguments
 
     def __str__(self):
-        return "%s%a" % (self.operator.upper(), self.arguments)
-
+        ARG_SEP = ' @@ARG_SEP@@ '
+        OP_SEP = ' @@OP_SEP@@ '
+        # print(self.arguments)
+        arguments = ARG_SEP.join(self.arguments)
+        # return "%s%a" % (self.operator.upper(), self.arguments)
+        return OP_SEP.join([self.operator, arguments])
 
 class StepIdentifier(object):
     def __init__(self):
@@ -154,4 +158,8 @@ class QDMRProgramBuilder(object):
     def build_program(self):
         raise NotImplementedError
         return True
+
+    def __str__(self):
+        SEP = ' @@SEP@@ '
+        return SEP.join([str(step) for step in self.steps])
         

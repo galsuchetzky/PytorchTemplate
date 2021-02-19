@@ -9,6 +9,7 @@ from pathlib import Path
 from utils.util import save_obj, load_obj
 from subprocess import run
 from tester.BREAK_evaluate_predictions import format_qdmr
+from utils.qdmr_identifier import *
 
 DEBUG_EXAMPLES_AMOUNT = 100
 
@@ -56,14 +57,18 @@ class BREAKLogical(data.Dataset):
         # Prepare the data parts
         self.ids = self.dataset_logical[self.dataset_type]['question_id']
         self.questions = self.dataset_logical[self.dataset_type]['question_text']
-        self.golds = [format_qdmr(decomp) for decomp in self.dataset_logical[self.dataset_type]["decomposition"]]
+        # uses QDMR
+        self.qdmrs = [format_qdmr(decomp) for decomp in self.dataset_logical[self.dataset_type]["decomposition"]]
+        # TODO empty string for test
+        self.programs = self.get_programs()
         if debug:
             self.ids = self.ids[:DEBUG_EXAMPLES_AMOUNT]
             self.questions = self.questions[:DEBUG_EXAMPLES_AMOUNT]
-            self.golds = self.golds[:DEBUG_EXAMPLES_AMOUNT]
+            self.qdmrs = self.qdmrs[:DEBUG_EXAMPLES_AMOUNT]
+            self.programs = self.programs[:DEBUG_EXAMPLES_AMOUNT]
 
         # # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
-        # self.golds = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.golds]
+        # self.qdmrs = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.qdmrs]
 
     def get_dataset_type(self):
         return self.dataset_type
@@ -97,7 +102,8 @@ class BREAKLogical(data.Dataset):
         :param idx: The index of the example to retrieve.
         :return: The retrieved example.
         """
-        example = (self.ids[idx], self.questions[idx], self.golds[idx].to_string())
+        # example = (self.ids[idx], self.questions[idx], self.qdmrs[idx].to_string())
+        example = (self.ids[idx], self.questions[idx], self.programs[idx])
         return example
 
     def __len__(self):
@@ -137,6 +143,7 @@ class BREAKLogical(data.Dataset):
         save_obj(dir_path, lexicon_dict, file_name)
         self.logger.info('Done creating lexicon.')
 
+
     def get_lexicon(self):
         # TODO add documentation
         self.logger.info("Preparing lexicon...")
@@ -153,6 +160,30 @@ class BREAKLogical(data.Dataset):
         #         data[type][ex] = ast.literal_eval(data[type][ex])
         self.logger.info("Lexicon ready.")
         return data
+
+    def create_matching_programs(self, dir_path, file_name):
+        # TODO add documentation
+        self.logger.info('Creating programs...')
+        programs = []
+        for gold in self.dataset_logical[self.dataset_type]["decomposition"]:
+            builder = QDMRProgramBuilder(gold)
+            builder.build()
+            programs.append(str(builder))
+        save_obj(dir_path, programs, file_name)
+        self.logger.info('Done creating programs.')
+
+    def get_programs(self):
+        self.logger.info("Preparing programs...")
+        current_dir = Path()
+        dir_path = current_dir / "data" / "break_data" / "programs"
+        file_name = "programs_" + self.dataset_type +".pkl"
+        if not (dir_path / file_name).is_file():
+            self.create_matching_programs(dir_path, file_name)
+        data = load_obj(dir_path, file_name)
+
+        self.logger.info("Programs ready.")
+        return data
+
 
     @staticmethod
     def visualize(question, gold):

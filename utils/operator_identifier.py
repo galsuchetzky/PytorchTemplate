@@ -59,7 +59,10 @@ class IdentifyOperator(object):
 
     def extract_args(self, step):
         args = self._extract_args()
-        return [a.strip() for a in args]
+        ref = r'#(\w+)'
+        fixed_args = [re.sub(ref, r'@@\g<1>@@', arg) for arg in args]
+
+        return [a.strip() for a in fixed_args]
 
     def _identify_op(self):
         raise NotImplementedError

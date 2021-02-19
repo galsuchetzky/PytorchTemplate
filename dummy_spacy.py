@@ -20,7 +20,9 @@ spacy.load('en_core_web_sm')
 
 # de_tokenizer = get_tokenizer('spacy', language='de')
 en_tokenizer = get_tokenizer('spacy', language='en_core_web_sm')
+sent = 'select @@OP_SEP@@ H. V. Jagadish @@SEP@@ project @@OP_SEP@@ papers of #REF @@ARG_SEP@@ #1 @@SEP@@ filter @@OP_SEP@@ #2 @@ARG_SEP@@ that are on PVLDB @@SEP@@ project @@OP_SEP@@ citations of #REF @@ARG_SEP@@ #3 @@SEP@@ group @@OP_SEP@@ count @@ARG_SEP@@ #4 @@ARG_SEP@@ #3 @@SEP@@ comparative @@OP_SEP@@ #3 @@ARG_SEP@@ #5 @@ARG_SEP@@ is higher than 200'
 
+print(en_tokenizer(sent))
 
 def build_vocab(sents, tokenizer):
     counter = Counter()
@@ -31,11 +33,11 @@ def build_vocab(sents, tokenizer):
                                     '@@4@@', '@@5@@', '@@6@@', '@@7@@', '@@8@@', '@@9@@'])
 
 
-dataloader = BREAKDataLoader('data/', 128)
+# dataloader = BREAKDataLoader('data/', 128)
 
-sents = dataloader.dataset.questions
+# sents = dataloader.dataset.questions
 # de_vocab = build_vocab(train_filepaths[0], de_tokenizer)
-en_vocab = build_vocab(sents, en_tokenizer)
+# en_vocab = build_vocab(sents, en_tokenizer)
 
 # print(en_vocab[0])
 # print(en_vocab['higher than'])
@@ -43,16 +45,16 @@ en_vocab = build_vocab(sents, en_tokenizer)
 # print(en_vocab[';'])
 
 
-def data_process(sents):
-    data = []
-    for sent in sents:
-        tensor_ = torch.tensor([en_vocab[token] for token in en_tokenizer(sent)],
-                               dtype=torch.long)
-        data.append(tensor_)
-    return data
+# def data_process(sents):
+#     data = []
+#     for sent in sents:
+#         tensor_ = torch.tensor([en_vocab[token] for token in en_tokenizer(sent)],
+#                                dtype=torch.long)
+#         data.append(tensor_)
+#     return data
 
 
-data = data_process(sents)
+# data = data_process(sents)
 
 # print(data[0])
 

@@ -58,10 +58,10 @@ def BREAK_vocab_logical():
     operators = list(phrases_by_operators.keys())
     phrases = [phrase for phrase_list in phrases_by_operators.values() for phrase in phrase_list]
 
-    specials = ['<unk>', '<sos>', '<pad>', '<eos>', '@@SEP@@', '@@10@@', '@@11@@', '@@12@@', '@@13@@',
+    specials = ['<unk>', '<sos>', '<pad>', '<eos>', '@@REF@@', '@@SEP@@', '@@OP_SEP@@', '@@ARG_SEP@@', '@@10@@', '@@11@@', '@@12@@', '@@13@@',
                 '@@14@@', '@@15@@', '@@16@@', '@@17@@', '@@18@@', '@@19@@', '@@1@@',
                 '@@2@@', '@@3@@', '@@4@@', '@@5@@', '@@6@@', '@@7@@', '@@8@@', '@@9@@']
-    specials.extend(phrases)
+    # specials.extend(phrases)
     specials.extend(operators)
 
     # model should learn that after BOS or '@@SEP@@' it should predict operators
