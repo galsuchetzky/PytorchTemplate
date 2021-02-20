@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from .base_BREAK_model import BaseBREAKModel
 from .base_model import BaseModel
+from transformers import BartTokenizer, BartForConditionalGeneration
 # TODO add documentation and shapes everywhere.
 # TODO remove the "your code here" from the models. give credits in a docstring above to the course.
 
@@ -97,9 +98,11 @@ class DecoderSimple(BaseModel):
         # start_token = torch.tensor(self.vocab[self.SOS_STR], device=self.device).view(1, -1)
 
         start_token = torch.full(size=(self.batch_size, 1), fill_value=self.vocab[self.SOS_STR], device=self.device)
+        end_token = torch.full(size=(self.batch_size, 1), fill_value=self.vocab[self.EOS_STR], device=self.device)
+
         # targets dim before (batch_size, target_seq_len)
         # targets dim after (batch_size, target_seq_len + 1)
-        targets = torch.cat((start_token, targets), dim=1)
+        targets = torch.cat((start_token, targets, end_token), dim=1)
         # loop through each index in the targets (all the batch targets together), except the last one
         # TODO in eval mode need to loop until EOS token reached
         for i, target in enumerate(torch.transpose(targets, 0, 1)[:-1]):
@@ -162,3 +165,9 @@ class EncoderDecoder(BaseBREAKModel):
                                        enc_input=input_tensor, enc_outputs=encoder_outputs)
 
         return decoder_outputs
+
+
+class BartBREAK(BaseBREAKModel):
+    def __init__(self, batch_size, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, vocab, device):
+        self.model = BartForConditionalGeneration.from_pretrained('facebook/bart-base')
+        self.tokenizer = BartTokenizer.from_pretrained('facebook/bart-base')

@@ -2,11 +2,12 @@ import torch.utils.data as data
 import numpy as np
 import spacy
 import logging
+import ast
 
 from logger.logger import setup_logging, LOGGER_SETUP
 from nlp import load_dataset
 from pathlib import Path
-from utils.util import save_obj, load_obj
+from utils.util import save_obj, load_obj, read_json, write_json
 from subprocess import run
 from tester.BREAK_evaluate_predictions import format_qdmr
 from utils.qdmr_identifier import *
@@ -19,7 +20,7 @@ class BREAKLogical(data.Dataset):
     The Break dataset: https://github.com/allenai/Break.
     """
 
-    def __init__(self, data_dir, train=True, valid=False, debug=False):
+    def __init__(self, data_dir, gold_type, train=True, valid=False, debug=False):
         """
         Initiates the Bread dataset.
         :param data_dir (str):  Path to the data in which to save/ from which to read the dataset.
@@ -35,6 +36,8 @@ class BREAKLogical(data.Dataset):
         self.logger.setLevel(logging.INFO)
         self.logger.info("Preparing dataset")
         super(BREAKLogical, self).__init__()
+
+        self.gold_type = gold_type
 
         # Load dataset and lexicon
         self.dataset_type = 'test'
@@ -103,7 +106,8 @@ class BREAKLogical(data.Dataset):
         :return: The retrieved example.
         """
         # example = (self.ids[idx], self.questions[idx], self.qdmrs[idx].to_string())
-        example = (self.ids[idx], self.questions[idx], self.programs[idx])
+        golds = self.qdmrs[idx].to_string() if self.gold_type == 'qdmr' else self.programs[idx]
+        example = (self.ids[idx], self.questions[idx], golds)
         return example
 
     def __len__(self):

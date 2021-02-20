@@ -1,11 +1,11 @@
 {
-    "name": "BART",
+    "name": "SimpleRNN_Encoder_Decoder",
     "n_gpu": 1,
     "arch": {
         "module": "model.BREAK_model",
-        "type": "BartBREAK",
+        "type": "EncoderDecoder",
         "args": {
-            "pretrained_model_name_or_path": "constants.batch_size",
+            "batch_size": "constants.batch_size",
             "enc_input_size": 256,
             "dec_input_size": 256,
             "enc_hidden_size": 256,
@@ -23,6 +23,7 @@
         "args": {
             "data_dir": "data/",
             "batch_size": "constants.batch_size",
+            "gold_type": "program",
             "shuffle": true,
             "validation_split": 0,
             "num_workers": 2
