@@ -209,7 +209,8 @@ qdmr = "return H. V. Jagadish ;return papers of #1 ;return #2 that  are on PVLDB
 print("* Original QDMR: \n%s\n" % qdmr)
 builder = QDMRProgramBuilder(qdmr)
 builder.build()
-print("* Identified steps: \n%a\n" % str(builder))
+program = str(builder)
+print("* Identified steps: \n%a\n" % program)
 # steps = [str(step) for step in builder.steps]
 # print("* Identified steps: \n%a\n" % steps)
 ops = [str(op) for op in builder.operators]
