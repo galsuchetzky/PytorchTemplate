@@ -98,11 +98,11 @@ class DecoderSimple(BaseModel):
         # start_token = torch.tensor(self.vocab[self.SOS_STR], device=self.device).view(1, -1)
 
         start_token = torch.full(size=(self.batch_size, 1), fill_value=self.vocab[self.SOS_STR], device=self.device)
-        end_token = torch.full(size=(self.batch_size, 1), fill_value=self.vocab[self.EOS_STR], device=self.device)
+        # end_token = torch.full(size=(self.batch_size, 1), fill_value=self.vocab[self.EOS_STR], device=self.device)
 
         # targets dim before (batch_size, target_seq_len)
         # targets dim after (batch_size, target_seq_len + 1)
-        targets = torch.cat((start_token, targets, end_token), dim=1)
+        targets = torch.cat((start_token, targets), dim=1)
         # loop through each index in the targets (all the batch targets together), except the last one
         # TODO in eval mode need to loop until EOS token reached
         for i, target in enumerate(torch.transpose(targets, 0, 1)[:-1]):

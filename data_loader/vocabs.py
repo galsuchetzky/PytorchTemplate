@@ -129,7 +129,7 @@ def batch_to_tensor(vocab, batch, pad_max_length, device):
     out_mask = []
     for data in batch:
         # Tokenize
-        tokenized_data = en_tokenizer(data)
+        tokenized_data = en_tokenizer(data) + ['<eos>']
 
         # Pad and create a mask
         padded = ['<pad>'] * pad_max_length

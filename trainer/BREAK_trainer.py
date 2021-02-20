@@ -103,9 +103,9 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
 
                 with torch.no_grad():
                     pred = torch.argmax(output, dim=1)
-                    data_str = batch_to_str(self.vocab, data, mask_data)
-                    target_str = batch_to_str(self.vocab, target, mask_target)
-                    pred_str = pred_batch_to_str(self.vocab, pred)
+                    # data_str = batch_to_str(self.vocab, data, mask_data)
+                    # target_str = batch_to_str(self.vocab, target, mask_target)
+                    # pred_str = pred_batch_to_str(self.vocab, pred)
 
                 # Update metrics
                 self.train_metrics.update('loss', loss.item())
