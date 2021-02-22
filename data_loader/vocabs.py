@@ -196,6 +196,8 @@ def pred_batch_to_str(vocab, pred, convert_to_program):
     """
     eos_id = vocab['<eos>']
     eos_mask = pred == eos_id
+    if eos_id in pred:
+        pass
     # operations on the mask to find first eos values in the rows
     mask_max_values, mask_max_indices = torch.max(eos_mask, dim=1)
     #include EOS token
