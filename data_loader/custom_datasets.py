@@ -40,16 +40,21 @@ class BREAKLogical(data.Dataset):
         self.gold_type = gold_type
 
         # Load dataset and lexicon
-        self.dataset_type = 'test'
+        self.dataset_split = 'test'
         if train:
-            self.dataset_type = 'train'
+            self.dataset_split = 'train'
             if valid:
-                self.dataset_type = 'validation'
+                self.dataset_split = 'validation'
 
-        self.logger.info('loading data split:' + self.dataset_type)
+        self.logger.info('loading data split:' + self.dataset_split)
 
         self.dataset_logical = self.load_dataset(data_dir, 'logical-forms', self.logger)
+<<<<<<< HEAD
 
+=======
+        self.lexicon_dict = self.get_lexicon()[self.dataset_split]
+        self.logger.info('dataset and lexicon ready.')
+>>>>>>> 4225aec7e057b124a607b8d40cab6a4b5f6de1b5
 
         # Download spacy language model
         if not spacy.util.is_package("en_core_web_sm"):
@@ -57,12 +62,17 @@ class BREAKLogical(data.Dataset):
             run(['python', '-m', 'spacy', 'download', 'en'])
 
         # Prepare the data parts
+<<<<<<< HEAD
         self.ids = self.dataset_logical[self.dataset_type]['question_id']
         self.questions = self.dataset_logical[self.dataset_type]['question_text']
         self.lexicon_dict = self.get_lexicon()[self.dataset_type]
         self.logger.info('dataset and lexicon ready.')
+=======
+        self.ids = self.dataset_logical[self.dataset_split]['question_id']
+        self.questions = self.dataset_logical[self.dataset_split]['question_text']
+>>>>>>> 4225aec7e057b124a607b8d40cab6a4b5f6de1b5
         # uses QDMR
-        self.qdmrs = [format_qdmr(decomp) for decomp in self.dataset_logical[self.dataset_type]["decomposition"]]
+        self.qdmrs = [format_qdmr(decomp) for decomp in self.dataset_logical[self.dataset_split]["decomposition"]]
         # TODO empty string for test
         self.programs = self.get_programs()
         if debug:
@@ -75,26 +85,26 @@ class BREAKLogical(data.Dataset):
         # # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
         # self.qdmrs = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.qdmrs]
 
-    def get_dataset_type(self):
-        return self.dataset_type
+    def get_dataset_split(self):
+        return self.dataset_split
 
     @staticmethod
-    def load_dataset(data_dir, dataset_type, logger=None):
+    def load_dataset(data_dir, dataset_split, logger=None):
         """
         loads the requested Break dataset from Hugging Face.
         :param data_dir: The path of the directory where the preprocessed dataset should be saved to or loaded from.
-        :param dataset_type: The type of dataset to download from HF.
+        :param dataset_split: The type of dataset to download from HF.
         :param logger: A logger for logging events.
         :return: The loaded dataset.
         """
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "preprocessed"
-        file_name = "dataset_preprocessed_" + dataset_type + ".pkl"
+        file_name = "dataset_preprocessed_" + dataset_split + ".pkl"
         if not (dir_path / file_name).is_file():
             # Download and preprocess the BREAK dataset (logical form and lexicon), and save the preprocessed data.
             if logger:
                 logger.info('Downloading and preparing datasets...')
-            dataset_logical = load_dataset('break_data', dataset_type, cache_dir=data_dir)
+            dataset_logical = load_dataset('break_data', dataset_split, cache_dir=data_dir)
             save_obj(dir_path, dataset_logical, file_name)
 
         # Load the saved preprocessed data.
@@ -170,7 +180,7 @@ class BREAKLogical(data.Dataset):
         # TODO add documentation
         self.logger.info('Creating programs...')
         programs = []
-        for gold in self.dataset_logical[self.dataset_type]["decomposition"]:
+        for gold in self.dataset_logical[self.dataset_split]["decomposition"]:
             builder = QDMRProgramBuilder(gold)
             builder.build()
             programs.append(str(builder))
@@ -181,7 +191,8 @@ class BREAKLogical(data.Dataset):
         self.logger.info("Preparing programs...")
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "programs"
-        file_name = "programs_" + self.dataset_type + ".pkl"
+
+        file_name = "programs_" + self.dataset_split +".pkl"
         if not (dir_path / file_name).is_file():
             self.create_matching_programs(dir_path, file_name)
         data = load_obj(dir_path, file_name)

@@ -7,7 +7,8 @@ from torchtext.vocab import Vocab
 from utils.util import save_obj, load_obj
 from data_loader.custom_datasets import BREAKLogical
 from torchtext.data.utils import get_tokenizer
-
+from utils.qdmr_identifier import *
+from tester.BREAK_qdmr_to_program import prediction_to_qdmr
 # English tokenizer for tokenizing natural language sentences when building a vocabulary.
 en_tokenizer = get_tokenizer('spacy', language='en_core_web_sm')
 
@@ -153,17 +154,24 @@ def batch_to_tensor(vocab, batch, pad_max_length, device):
     return out_tensor, out_mask
 
 
-def tensor_to_str(vocab, tensor):
+def tensor_to_str(vocab, tensor, convert_to_program):
     """
     Converts a tensor of indices to a string.
     :param vocab: The vocab to take the strings from.
     :param tensor: A tensor of indices.
     :return: The result string.
     """
-    return " ".join(vocab.itos[idx] for idx in tensor)
+    text = " ".join(vocab.itos[idx] for idx in tensor)
+    if convert_to_program:
+        #first convert to untokenized form
+        untokenized = prediction_to_qdmr(text)
+        builder = QDMRProgramBuilder(untokenized)
+        builder.build()
+        text = str(builder)
+    return text
 
 
-def batch_to_str(vocab, batch, mask):
+def batch_to_str(vocab, batch, mask, convert_to_program):
     """
 
     :param vocab:
@@ -174,11 +182,11 @@ def batch_to_str(vocab, batch, mask):
     lst = []
     for data_row, mask_row in zip(batch, mask):
         mask_row = mask_row == 1
-        lst.append(tensor_to_str(vocab, torch.masked_select(data_row, mask_row)))
+        lst.append(tensor_to_str(vocab, torch.masked_select(data_row, mask_row), convert_to_program))
     return lst
 
 
-def pred_batch_to_str(vocab, pred):
+def pred_batch_to_str(vocab, pred, convert_to_program):
     """
     create mask according to the first appearance of <'EOS_STR'>
     then convert to list of str
@@ -200,4 +208,4 @@ def pred_batch_to_str(vocab, pred):
     # once encountered eos, mask out the rest of the prediction
     for i in range(mask.shape[0]):
         mask[i][mask_max_indices[i]:] = 0
-    return batch_to_str(vocab, pred, mask)
+    return batch_to_str(vocab, pred, mask, convert_to_program)

@@ -29,7 +29,7 @@ def main(config):
     batch_size = model.batch_size
     question_pad_length = config['data_loader']['question_pad_length']
     qdmr_pad_length = config['data_loader']['qdmr_pad_length']
-
+    is_qdmr = config['data_loader']['args']['gold_type'] == 'qdmr'
     while True:
         question = input('question: ')
         # TODO change this to "predict" function
@@ -43,7 +43,7 @@ def main(config):
         output = torch.transpose(output, 1, 2)
         pred = torch.argmax(output, dim=1)
 
-        decomposition = pred_batch_to_str(model.vocab, pred)[0]
+        decomposition = pred_batch_to_str(model.vocab, pred, convert_to_program=is_qdmr)[0]
 
         print('decomposition:\t', decomposition)
 
