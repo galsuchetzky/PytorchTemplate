@@ -3,7 +3,7 @@
     "n_gpu": 1,
     "arch": {
         "module": "model.BREAK_model",
-        "type": "EncoderDecoder",
+        "type": "EncoderDecoderSimple",
         "args": {
             "batch_size": "constants.batch_size",
             "enc_input_size": 256,

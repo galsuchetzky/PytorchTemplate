@@ -49,8 +49,7 @@ class BREAKLogical(data.Dataset):
         self.logger.info('loading data split:' + self.dataset_type)
 
         self.dataset_logical = self.load_dataset(data_dir, 'logical-forms', self.logger)
-        self.lexicon_dict = self.get_lexicon()[self.dataset_type]
-        self.logger.info('dataset and lexicon ready.')
+
 
         # Download spacy language model
         if not spacy.util.is_package("en_core_web_sm"):
@@ -60,6 +59,8 @@ class BREAKLogical(data.Dataset):
         # Prepare the data parts
         self.ids = self.dataset_logical[self.dataset_type]['question_id']
         self.questions = self.dataset_logical[self.dataset_type]['question_text']
+        self.lexicon_dict = self.get_lexicon()[self.dataset_type]
+        self.logger.info('dataset and lexicon ready.')
         # uses QDMR
         self.qdmrs = [format_qdmr(decomp) for decomp in self.dataset_logical[self.dataset_type]["decomposition"]]
         # TODO empty string for test
@@ -68,6 +69,7 @@ class BREAKLogical(data.Dataset):
             self.ids = self.ids[:DEBUG_EXAMPLES_AMOUNT]
             self.questions = self.questions[:DEBUG_EXAMPLES_AMOUNT]
             self.qdmrs = self.qdmrs[:DEBUG_EXAMPLES_AMOUNT]
+            self.lexicon_dict = self.lexicon_dict[:DEBUG_EXAMPLES_AMOUNT]
             self.programs = self.programs[:DEBUG_EXAMPLES_AMOUNT]
 
         # # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
@@ -107,7 +109,7 @@ class BREAKLogical(data.Dataset):
         """
         # example = (self.ids[idx], self.questions[idx], self.qdmrs[idx].to_string())
         golds = self.qdmrs[idx].to_string() if self.gold_type == 'qdmr' else self.programs[idx]
-        example = (self.ids[idx], self.questions[idx], golds)
+        example = (self.ids[idx], self.questions[idx], golds, self.lexicon_dict[idx])
         return example
 
     def __len__(self):
@@ -147,7 +149,6 @@ class BREAKLogical(data.Dataset):
         save_obj(dir_path, lexicon_dict, file_name)
         self.logger.info('Done creating lexicon.')
 
-
     def get_lexicon(self):
         # TODO add documentation
         self.logger.info("Preparing lexicon...")
@@ -159,9 +160,9 @@ class BREAKLogical(data.Dataset):
         data = load_obj(dir_path, file_name)
         # TODO these lines turn the string repr of lists to real lists, but slow. save to file or something.
         # TODO uncomment this
-        # for type in data:
-        #     for ex in data[type]:
-        #         data[type][ex] = ast.literal_eval(data[type][ex])
+        for type in data:
+            for ex in data[type]:
+                data[type][ex] = ast.literal_eval(data[type][ex])
         self.logger.info("Lexicon ready.")
         return data
 
@@ -180,14 +181,13 @@ class BREAKLogical(data.Dataset):
         self.logger.info("Preparing programs...")
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "programs"
-        file_name = "programs_" + self.dataset_type +".pkl"
+        file_name = "programs_" + self.dataset_type + ".pkl"
         if not (dir_path / file_name).is_file():
             self.create_matching_programs(dir_path, file_name)
         data = load_obj(dir_path, file_name)
 
         self.logger.info("Programs ready.")
         return data
-
 
     @staticmethod
     def visualize(question, gold):

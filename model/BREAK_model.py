@@ -133,8 +133,94 @@ class DecoderSimple(BaseModel):
         ### --------------
         return outputs
 
+class DecoderDynamic(BaseModel):
+    """
+    simple decoder for seq2seq.
+    """
 
-class EncoderDecoder(BaseBREAKModel):
+    def __init__(self, batch_size, input_size, enc_hidden_size, hidden_size, vocab, sos_str, eos_str, device, **kwargs):
+        """
+        :param input_size: The size of the input tensor.
+        :param hidden_size: The size of the hidden states of the decoder.
+        :param vocab: The output vocabulary.
+        :param enc_hidden_size: The size of the encoder hidden state.
+        :param kwargs: Additional arguments.
+        """
+        super().__init__(device)
+        self.batch_size = batch_size
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.enc_hidden_size = enc_hidden_size
+        self.vocab = vocab
+        self.output_size = len(self.vocab)
+        self.SOS_STR = sos_str
+        self.EOS_STR = eos_str
+
+        # TODO use padding_idx in embedding
+        self.embedding = nn.Embedding(self.output_size, embedding_dim=self.hidden_size)
+
+        # for projecting the last hidden state of the encoder to the decoder space,
+        # as the first decoder hidden state, in case the two dimensions don't match
+        self.W_p = nn.Linear(enc_hidden_size, hidden_size)
+
+        self.gru_cell = nn.GRUCell(self.input_size, self.hidden_size)
+
+        # for output
+        self.W_s = nn.Linear(self.hidden_size, self.output_size)
+        # TODO maybe replace linear layer with embedding matrix - usually tied to encoder embedding matrix)
+        # TODO add dropout layers
+
+    def forward(self, targets, h, evaluation_mode=False, **kwargs):
+        ### YOUR CODE HERE
+        # if evaluation_mode:
+        #     generation_length = 256
+        # else:
+        #     generation_length = len(targets)
+        outputs = []  # For keeping the outputs
+        # h dim before (1,batch_size, enc_hidden_size)
+        # h dim after (batch_size, hidden_size)
+        h = self.W_p(h).squeeze(0)  # Project the last hidden state of the encoder to the input size of the decoder.
+        # start_token = torch.tensor(self.vocab[self.SOS_STR], device=self.device).view(1, -1)
+
+        start_token = torch.full(size=(self.batch_size, 1), fill_value=self.vocab[self.SOS_STR], device=self.device)
+        # end_token = torch.full(size=(self.batch_size, 1), fill_value=self.vocab[self.EOS_STR], device=self.device)
+
+        # targets dim before (batch_size, target_seq_len)
+        # targets dim after (batch_size, target_seq_len + 1)
+        targets = torch.cat((start_token, targets), dim=1)
+        # loop through each index in the targets (all the batch targets together), except the last one
+        # TODO in eval mode need to loop until EOS token reached
+        # for i in range(generation_length):
+        for i, target in enumerate(torch.transpose(targets, 0, 1)[:-1]):
+            if evaluation_mode and i > 0:  # use the output of the model rather then the target as input only for evaluation
+                argmax_idx = torch.tensor(torch.argmax(output, dim=1))
+                input = self.embedding(argmax_idx)
+            else:
+                input = self.embedding(target)
+            # target dim (batch_size)
+            # input dim  (batch_size, hidden_size)
+            # input = self.embedding(target)
+            # use the output of the model rather then the target as input only for evaluation
+            # if evaluation_mode and i > 0:
+            #     input = self.embedding(torch.tensor(torch.argmax(output, dim=1)))
+
+            h = self.gru_cell(input, h)
+            # h dim (batch_size, hidden_size))
+            output = self.W_s(h)
+            # output dim (batch_size,output_size)
+
+            # reduce inf from any word that is not in the lexicon
+            lexicon_mask = []
+            output -= lexicon_mask
+            outputs.append(output)
+        # outputs dim (batch_size, seq_len, output_size)
+        outputs = torch.stack(outputs, dim=1)
+        ### --------------
+        return outputs
+
+
+
+class EncoderDecoderSimple(BaseBREAKModel):
     """
     Seq2Seq basic.
     """
