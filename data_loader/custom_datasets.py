@@ -49,12 +49,9 @@ class BREAKLogical(data.Dataset):
         self.logger.info('loading data split:' + self.dataset_split)
 
         self.dataset_logical = self.load_dataset(data_dir, 'logical-forms', self.logger)
-<<<<<<< HEAD
 
-=======
         self.lexicon_dict = self.get_lexicon()[self.dataset_split]
         self.logger.info('dataset and lexicon ready.')
->>>>>>> 4225aec7e057b124a607b8d40cab6a4b5f6de1b5
 
         # Download spacy language model
         if not spacy.util.is_package("en_core_web_sm"):
@@ -62,15 +59,11 @@ class BREAKLogical(data.Dataset):
             run(['python', '-m', 'spacy', 'download', 'en'])
 
         # Prepare the data parts
-<<<<<<< HEAD
-        self.ids = self.dataset_logical[self.dataset_type]['question_id']
-        self.questions = self.dataset_logical[self.dataset_type]['question_text']
-        self.lexicon_dict = self.get_lexicon()[self.dataset_type]
-        self.logger.info('dataset and lexicon ready.')
-=======
         self.ids = self.dataset_logical[self.dataset_split]['question_id']
         self.questions = self.dataset_logical[self.dataset_split]['question_text']
->>>>>>> 4225aec7e057b124a607b8d40cab6a4b5f6de1b5
+        self.lexicon_dict = self.get_lexicon()[self.dataset_split]
+        self.logger.info('dataset and lexicon ready.')
+
         # uses QDMR
         self.qdmrs = [format_qdmr(decomp) for decomp in self.dataset_logical[self.dataset_split]["decomposition"]]
         # TODO empty string for test
@@ -119,7 +112,8 @@ class BREAKLogical(data.Dataset):
         """
         # example = (self.ids[idx], self.questions[idx], self.qdmrs[idx].to_string())
         golds = self.qdmrs[idx].to_string() if self.gold_type == 'qdmr' else self.programs[idx]
-        example = (self.ids[idx], self.questions[idx], golds, self.lexicon_dict[idx])
+        example = (self.ids[idx], self.questions[idx], golds, ';'.join(self.lexicon_dict[idx]))
+        #todo there is false for some reason in the lexicon
         return example
 
     def __len__(self):
