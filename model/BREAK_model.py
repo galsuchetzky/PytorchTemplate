@@ -91,6 +91,10 @@ class DecoderSimple(BaseModel):
 
     def forward(self, targets, h, evaluation_mode=False, **kwargs):
         ### YOUR CODE HERE
+        # if evaluation_mode:
+        #     generation_length = 256
+        # else:
+        #     generation_length = len(targets)
         outputs = []  # For keeping the outputs
         # h dim before (1,batch_size, enc_hidden_size)
         # h dim after (batch_size, hidden_size)
@@ -105,13 +109,19 @@ class DecoderSimple(BaseModel):
         targets = torch.cat((start_token, targets), dim=1)
         # loop through each index in the targets (all the batch targets together), except the last one
         # TODO in eval mode need to loop until EOS token reached
+        # for i in range(generation_length):
         for i, target in enumerate(torch.transpose(targets, 0, 1)[:-1]):
+            if evaluation_mode and i > 0:  # use the output of the model rather then the target as input only for evaluation
+                argmax_idx = torch.tensor(torch.argmax(output, dim=1))
+                input = self.embedding(argmax_idx)
+            else:
+                input = self.embedding(target)
             # target dim (batch_size)
             # input dim  (batch_size, hidden_size)
-            input = self.embedding(target)
+            # input = self.embedding(target)
             # use the output of the model rather then the target as input only for evaluation
-            if evaluation_mode and i > 0:
-                input = self.embedding(torch.tensor(torch.argmax(output, dim=1)))
+            # if evaluation_mode and i > 0:
+            #     input = self.embedding(torch.tensor(torch.argmax(output, dim=1)))
 
             h = self.gru_cell(input, h)
             # h dim (batch_size, hidden_size))

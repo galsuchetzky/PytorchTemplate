@@ -1,5 +1,7 @@
 import numpy as np
 import torch
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 from .base_trainer import BaseTrainer
 from utils.util import inf_loop, MetricTracker
