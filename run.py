@@ -4,6 +4,8 @@ import model.metric as module_metric
 
 from importlib import import_module
 from utils.util import prepare_device
+import os
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 def run(config, train=True):

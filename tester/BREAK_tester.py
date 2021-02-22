@@ -58,6 +58,7 @@ class Seq2SeqSimpleTester(BaseTester):
         questions = []
         decompositions = []
         targets = []
+        convert_to_program = self.data_loader.gold_type_is_qdmr()
 
         # Sets the model to evaluation mode.
         self.valid_metrics.reset()
@@ -74,9 +75,9 @@ class Seq2SeqSimpleTester(BaseTester):
                 start = time.time()
                 # Convert the predictions/ targets/questions from tensor of token_ids to list of strings.
                 # TODO do we need to convert here or can we use the originals? (for data and target)
-                data_str = batch_to_str(self.vocab, data, mask_data)
-                target_str = batch_to_str(self.vocab, target, mask_target)
-                pred_str = pred_batch_to_str(self.vocab, pred)
+                data_str = batch_to_str(self.vocab, data, mask_data, convert_to_program=False)
+                target_str = batch_to_str(self.vocab, target, mask_target, convert_to_program=convert_to_program)
+                pred_str = pred_batch_to_str(self.vocab, pred, convert_to_program=convert_to_program)
 
                 self.valid_metrics.update('loss', loss.item())
                 for met in self.metric_ftns:
