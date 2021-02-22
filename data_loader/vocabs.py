@@ -188,10 +188,12 @@ def pred_batch_to_str(vocab, pred):
     """
     eos_id = vocab['<eos>']
     eos_mask = pred == eos_id
+    if eos_id in pred:
+        pass
     # operations on the mask to find first eos values in the rows
     mask_max_values, mask_max_indices = torch.max(eos_mask, dim=1)
     #include EOS token
-    torch.add(mask_max_indices, 1)
+    mask_max_indices = torch.add(mask_max_indices, 1)
     # in case there are rows with no eos
     mask_max_indices[mask_max_values == 0] = pred.shape[1]
     mask = torch.ones(pred.shape)
