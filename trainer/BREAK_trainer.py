@@ -85,12 +85,12 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         convert_to_program = self.data_loader.gold_type_is_qdmr()
 
         with tqdm(total=len(self.data_loader)) as progbar:
-            for batch_idx, (_, data, target, lexicons) in enumerate(self.data_loader):
+            for batch_idx, (_, data, target) in enumerate(self.data_loader):
                 data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
                 target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
                 # Run the model on the batch
                 self.optimizer.zero_grad()
-                output = self.model(data, target, lexicons)
+                output = self.model(data, target)
 
                 # loss expects (minibatch, classes, seq_len)
                 # out now is (batch_size, seq_len, output_size)

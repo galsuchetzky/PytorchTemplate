@@ -72,7 +72,7 @@ class BREAKLogical(data.Dataset):
             self.ids = self.ids[:DEBUG_EXAMPLES_AMOUNT]
             self.questions = self.questions[:DEBUG_EXAMPLES_AMOUNT]
             self.qdmrs = self.qdmrs[:DEBUG_EXAMPLES_AMOUNT]
-            self.lexicon_dict = self.lexicon_dict[:DEBUG_EXAMPLES_AMOUNT]
+            # self.lexicon_dict = self.lexicon_dict[:DEBUG_EXAMPLES_AMOUNT]
             self.programs = self.programs[:DEBUG_EXAMPLES_AMOUNT]
 
         # # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
@@ -112,7 +112,9 @@ class BREAKLogical(data.Dataset):
         """
         # example = (self.ids[idx], self.questions[idx], self.qdmrs[idx].to_string())
         golds = self.qdmrs[idx].to_string() if self.gold_type == 'qdmr' else self.programs[idx]
-        example = (self.ids[idx], self.questions[idx], golds, ';'.join(self.lexicon_dict[idx]))
+        # example = (self.ids[idx], self.questions[idx], golds, ';'.join(self.lexicon_dict[idx]))
+        example = (self.ids[idx], self.questions[idx], golds)
+
         #todo there is false for some reason in the lexicon
         return example
 
