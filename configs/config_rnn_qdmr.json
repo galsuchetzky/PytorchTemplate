@@ -43,7 +43,7 @@
             "amsgrad": true
         }
     },
-    "loss": "CrossEntropyLoss",
+    "loss": "masked_sequence_cross_entropy_with_logits",
     "metrics": {
         "train_metrics": [],
         "eval_metrics": ["exact_match", "sari_score", "structural_match_ratio"],
@@ -78,6 +78,6 @@
         "examples_amount": 100
     },
     "constants" : {
-        "batch_size": 8
+        "batch_size": 2
     }
 }

@@ -73,7 +73,7 @@ def get_specials_program():
     specials = operators + simple_specials
     return specials
 
-def BREAK_vocab_logical():
+def BREAK_vocab_program():
 
     specials = get_specials_program()
 
