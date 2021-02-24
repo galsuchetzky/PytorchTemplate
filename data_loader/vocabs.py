@@ -1,5 +1,6 @@
 import spacy
 import torch
+import ast
 
 from pathlib import Path
 from collections import Counter
@@ -20,9 +21,7 @@ def BREAK_vocab_simple():
     """
     # Special characters to include in the vocabulary.
     # TODO move the special tokens (unk, pad ...) to constants out of here.
-    specials = ['<unk>', '<sos>', '<pad>', '<eos>', '@@SEP@@', '@@10@@', '@@11@@', '@@12@@', '@@13@@',
-                '@@14@@', '@@15@@', '@@16@@', '@@17@@', '@@18@@', '@@19@@', '@@1@@',
-                '@@2@@', '@@3@@', '@@4@@', '@@5@@', '@@6@@', '@@7@@', '@@8@@', '@@9@@']
+    specials = get_specials_simple()
 
     # Load the dataset and get the words.
     # TODO The dictionary as for now is only created from the training data. maybe change that.
@@ -33,9 +32,21 @@ def BREAK_vocab_simple():
     vocab = build_vocab(specials, dir_path, file_name, sents, en_tokenizer)
     return vocab
 
+def get_specials_simple():
+    """
 
-def BREAK_vocab_logical():
-    # operators = ["select", "filter", "project", "aggregate",
+    :return:
+    """
+    specials = ['<unk>', '<sos>', '<pad>', '<eos>', '@@SEP@@', '@@10@@', '@@11@@', '@@12@@', '@@13@@',
+                '@@14@@', '@@15@@', '@@16@@', '@@17@@', '@@18@@', '@@19@@', '@@1@@',
+                '@@2@@', '@@3@@', '@@4@@', '@@5@@', '@@6@@', '@@7@@', '@@8@@', '@@9@@']
+    return specials
+
+def get_specials_logical():
+    """
+
+    :return:
+    """# operators = ["select", "filter", "project", "aggregate",
     #              "group", "superlative", "comparative",
     #              "union", "intersection", "discard",
     #              "sort", "boolean", "arithmetic",
@@ -58,12 +69,13 @@ def BREAK_vocab_logical():
 
     operators = list(phrases_by_operators.keys())
     phrases = [phrase for phrase_list in phrases_by_operators.values() for phrase in phrase_list]
+    simple_specials = get_specials_simple()
+    specials = operators + simple_specials
+    return specials
 
-    specials = ['<unk>', '<sos>', '<pad>', '<eos>', '@@REF@@', '@@SEP@@', '@@OP_SEP@@', '@@ARG_SEP@@', '@@10@@', '@@11@@', '@@12@@', '@@13@@',
-                '@@14@@', '@@15@@', '@@16@@', '@@17@@', '@@18@@', '@@19@@', '@@1@@',
-                '@@2@@', '@@3@@', '@@4@@', '@@5@@', '@@6@@', '@@7@@', '@@8@@', '@@9@@']
-    # specials.extend(phrases)
-    specials.extend(operators)
+def BREAK_vocab_logical():
+
+    specials = get_specials_logical()
 
     # model should learn that after BOS or '@@SEP@@' it should predict operators
     # otherwise, it should predict phrase or other words or '@@SEP@@'
@@ -153,6 +165,46 @@ def batch_to_tensor(vocab, batch, pad_max_length, device):
 
     return out_tensor, out_mask
 
+def tokenize_lexicon_str(vocab, lexicon_str, pad_max_length, device):
+    """
+
+    :param lexicon_str:
+    :return: a tensor of ids from vocabulary for each . shape=(batch_size,max_length?)
+    """
+    out_tensor = []
+    out_mask = []
+    for row in lexicon_str:
+        lexicon_words = []
+        row_lst = ast.literal_eval(row)
+        for phrase in row_lst:
+            # handle phrase = False
+            if not phrase:
+                continue
+            tokenized_words = en_tokenizer(phrase)
+            lexicon_words.extend(tokenized_words)
+        # remove duplicates
+        lexicon_words = list(dict.fromkeys(lexicon_words))
+
+        lexicon_words.extend(get_specials_logical())
+
+        # Pad and create a mask
+        padded = ['<pad>'] * pad_max_length
+        mask = [0] * pad_max_length
+        data_len = min(len(lexicon_words), pad_max_length)
+
+        padded[:data_len] = lexicon_words[:data_len]
+        mask[:data_len] = [1] * data_len
+
+        tensor = torch.tensor([vocab[token] for token in padded], dtype=torch.long)
+        mask = torch.tensor(mask, dtype=torch.long)
+
+        # Add to list
+        out_tensor.append(tensor)
+        out_mask.append(mask)
+    # Stack
+    out_tensor = torch.stack(out_tensor).to(device)
+    out_mask = torch.stack(out_mask).to(device)
+    return out_tensor, out_mask
 
 def tensor_to_str(vocab, tensor, convert_to_program):
     """

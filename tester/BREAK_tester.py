@@ -6,7 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 from .base_tester import BaseTester
 from utils.util import MetricTracker
-from data_loader.vocabs import batch_to_tensor, batch_to_str, pred_batch_to_str
+from data_loader.vocabs import batch_to_tensor, batch_to_str, pred_batch_to_str, tokenize_lexicon_str
 from torch.nn import CrossEntropyLoss
 
 
@@ -33,6 +33,7 @@ class Seq2SeqSimpleTester(BaseTester):
         self.vocab = model.vocab
         self.question_pad_length = config['data_loader']['question_pad_length']
         self.qdmr_pad_length = config['data_loader']['qdmr_pad_length']
+        self.lexicon_pad_length = config['data_loader']['lexicon_pad_length']
         self.pad_idx = self.vocab['<pad>']
 
         # Overriding the criterion.
@@ -63,12 +64,13 @@ class Seq2SeqSimpleTester(BaseTester):
         # Sets the model to evaluation mode.
         self.valid_metrics.reset()
         with tqdm(total=len(self.data_loader)) as progbar:
-            for batch_idx, (_, data, target) in enumerate(self.data_loader):
+            for batch_idx, (_, data, target, lexicon_str) in enumerate(self.data_loader):
                 data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
                 target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
+                lexicon_ids, mask_lexicon = tokenize_lexicon_str(self.vocab, lexicon_str, self.qdmr_pad_length, self.device)
                 start = time.time()
                 # Run the model on the batch and calculate the loss
-                output = self.model(data, target, evaluation_mode=True)
+                output = self.model(data, target, lexicon_ids, evaluation_mode=True)
                 output = torch.transpose(output, 1, 2)
                 pred = torch.argmax(output, dim=1)
                 loss = self.criterion(output, target)
@@ -128,12 +130,13 @@ class Seq2SeqSimpleTester(BaseTester):
         # Sets the model to evaluation mode.
         self.valid_metrics.reset()
         with tqdm(total=len(self.data_loader)) as progbar:
-            for batch_idx, (question_ids, data, target) in enumerate(self.data_loader):
+            for batch_idx, (question_ids, data, target, lexicon_str) in enumerate(self.data_loader):
                 data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
                 target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
+                lexicon_ids, mask_lexicon = tokenize_lexicon_str(self.vocab, lexicon_str, self.qdmr_pad_length, self.device)
                 start = time.time()
                 # Run the model on the batch and calculate the loss
-                output = self.model(data, target, evaluation_mode=True)
+                output = self.model(data, target, lexicon_ids, evaluation_mode=True)
                 output = torch.transpose(output, 1, 2)
                 pred = torch.argmax(output, dim=1)
                 loss = self.criterion(output, target)

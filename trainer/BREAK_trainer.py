@@ -6,7 +6,7 @@ import torch
 from .base_trainer import BaseTrainer
 from utils.util import inf_loop, MetricTracker
 from tqdm import tqdm
-from data_loader.vocabs import batch_to_tensor, batch_to_str, pred_batch_to_str
+from data_loader.vocabs import batch_to_tensor, batch_to_str, pred_batch_to_str, tokenize_lexicon_str
 from torch.nn import CrossEntropyLoss
 from tester.BREAK_tester import Seq2SeqSimpleTester
 
@@ -51,6 +51,7 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
 
         self.question_pad_length = config['data_loader']['question_pad_length']
         self.qdmr_pad_length = config['data_loader']['qdmr_pad_length']
+        self.lexicon_pad_length = config['data_loader']['lexicon_pad_length']
         if len_epoch is None:
             # epoch-based training
             self.len_epoch = len(self.data_loader)
@@ -85,12 +86,13 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         convert_to_program = self.data_loader.gold_type_is_qdmr()
 
         with tqdm(total=len(self.data_loader)) as progbar:
-            for batch_idx, (_, data, target) in enumerate(self.data_loader):
+            for batch_idx, (_, data, target, lexicon_str) in enumerate(self.data_loader):
                 data, mask_data = batch_to_tensor(self.vocab, data, self.question_pad_length, self.device)
                 target, mask_target = batch_to_tensor(self.vocab, target, self.qdmr_pad_length, self.device)
+                lexicon_ids, mask_lexicon = tokenize_lexicon_str(self.vocab, lexicon_str, self.qdmr_pad_length, self.device)
                 # Run the model on the batch
                 self.optimizer.zero_grad()
-                output = self.model(data, target)
+                output = self.model(data, target, lexicon_ids)
 
                 # loss expects (minibatch, classes, seq_len)
                 # out now is (batch_size, seq_len, output_size)

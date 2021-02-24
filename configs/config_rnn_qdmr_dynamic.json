@@ -1,18 +1,18 @@
 {
-    "name": "BART",
+    "name": "SimpleRNN_Encoder_Decoder",
     "n_gpu": 1,
     "arch": {
         "module": "model.BREAK_model",
-        "type": "BartBREAK",
+        "type": "EncoderDecoderDynamic",
         "args": {
-            "pretrained_model_name_or_path": "constants.batch_size",
+            "batch_size": "constants.batch_size",
             "enc_input_size": 256,
             "dec_input_size": 256,
             "enc_hidden_size": 256,
             "dec_hidden_size": 256,
             "vocab": {
                 "module": "data_loader.vocabs",
-                "type": "BREAK_vocab_logical",
+                "type": "BREAK_vocab_simple",
                 "args": {}
             }
         }
@@ -23,12 +23,14 @@
         "args": {
             "data_dir": "data/",
             "batch_size": "constants.batch_size",
+            "gold_type": "qdmr",
             "shuffle": true,
             "validation_split": 0,
             "num_workers": 2
         },
         "question_pad_length": 64,
-        "qdmr_pad_length": 256
+        "qdmr_pad_length": 256,
+        "lexicon_pad_length": 256
     },
     "optimizer": {
         "type": "Adam",

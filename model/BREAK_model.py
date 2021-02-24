@@ -118,10 +118,7 @@ class DecoderSimple(BaseModel):
                 input = self.embedding(target)
             # target dim (batch_size)
             # input dim  (batch_size, hidden_size)
-            # input = self.embedding(target)
-            # use the output of the model rather then the target as input only for evaluation
-            # if evaluation_mode and i > 0:
-            #     input = self.embedding(torch.tensor(torch.argmax(output, dim=1)))
+
 
             h = self.gru_cell(input, h)
             # h dim (batch_size, hidden_size))
@@ -170,7 +167,7 @@ class DecoderDynamic(BaseModel):
         # TODO maybe replace linear layer with embedding matrix - usually tied to encoder embedding matrix)
         # TODO add dropout layers
 
-    def forward(self, targets, h, evaluation_mode=False, **kwargs):
+    def forward(self, targets, h, lexicon_ids, evaluation_mode=False, **kwargs):
         ### YOUR CODE HERE
         # if evaluation_mode:
         #     generation_length = 256
@@ -209,12 +206,19 @@ class DecoderDynamic(BaseModel):
             output = self.W_s(h)
             # output dim (batch_size,output_size)
 
-            # reduce inf from any word that is not in the lexicon
-            lexicon_mask = []
-            output -= lexicon_mask
+            fill_value = -1e32
+            # the returned Tensor has the same torch.dtype and torch.device as this tensor
+            lexicon_adjustment = output.new_full((self.batch_size, self.output_size), fill_value)
+            lexicon_adjustment[torch.arange(self.batch_size).unsqueeze(1), lexicon_ids] = 0
+            output += lexicon_adjustment
+
             outputs.append(output)
         # outputs dim (batch_size, seq_len, output_size)
         outputs = torch.stack(outputs, dim=1)
+
+        # reduce inf from any word that is not in the lexicon
+
+
         ### --------------
         return outputs
 
@@ -251,7 +255,7 @@ class EncoderDecoderSimple(BaseBREAKModel):
                                      self.vocab,
                                      self.SOS_STR, self.EOS_STR, self.device)
 
-    def forward(self, input_tensor, target_tensor, evaluation_mode=False, **kwargs):
+    def forward(self, input_tensor, target_tensor, lexicon_ids, evaluation_mode=False, **kwargs):
         # TODO stop predicting when reaching EOS (dont evaluate the rest predicted), but keep predicting for the rest of the batch_length
         # TODO when in eval_mode do not use target at all
         encoder_hidden_first = self.encoder.init_hidden().to(self.device)
@@ -262,6 +266,47 @@ class EncoderDecoderSimple(BaseBREAKModel):
 
         return decoder_outputs
 
+class EncoderDecoderDynamic(BaseBREAKModel):
+    """
+    Seq2Seq basic.
+    """
+
+    def __init__(self, batch_size, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, vocab, device):
+        """
+        :param enc_input_size: The dimension of the input embeddings for the encoder.
+        :param dec_input_size: The dimension of the input embeddings for the decoder.
+        :param enc_hidden_size: The size of the encoder hidden state.
+        :param dec_hidden_size: The size of the decoder hidden state.
+        :param vocab: The vocabulary of the input and output.
+        :param device: The device to use for the model.
+        """
+        super().__init__(device)
+
+        self.batch_size = batch_size
+        self.enc_input_size = enc_input_size
+        self.dec_input_size = dec_input_size
+        self.enc_hidden_size = enc_hidden_size
+        self.dec_hidden_size = dec_hidden_size
+        self.vocab = vocab
+        self.device = device
+        self.output_size = len(self.vocab)
+        self.SOS_STR = '<sos>'
+        self.EOS_STR = '<eos>'
+        self.encoder = EncoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.vocab, self.device)
+        self.decoder = DecoderDynamic(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.dec_hidden_size,
+                                     self.vocab,
+                                     self.SOS_STR, self.EOS_STR, self.device)
+
+    def forward(self, input_tensor, target_tensor, lexicon_ids, evaluation_mode=False, **kwargs):
+        # TODO stop predicting when reaching EOS (dont evaluate the rest predicted), but keep predicting for the rest of the batch_length
+        # TODO when in eval_mode do not use target at all
+        encoder_hidden_first = self.encoder.init_hidden().to(self.device)
+        encoder_outputs, encoder_h_m = self.encoder(input_tensor, encoder_hidden_first)
+        decoder_hidden = encoder_h_m
+        decoder_outputs = self.decoder(target_tensor, decoder_hidden, lexicon_ids,
+                                       enc_input=input_tensor, enc_outputs=encoder_outputs)
+
+        return decoder_outputs
 
 class BartBREAK(BaseBREAKModel):
     def __init__(self, batch_size, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, vocab, device):

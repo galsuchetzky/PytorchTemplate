@@ -29,7 +29,8 @@
             "num_workers": 2
         },
         "question_pad_length": 64,
-        "qdmr_pad_length": 256
+        "qdmr_pad_length": 256,
+        "lexicon_pad_length": 256
     },
     "optimizer": {
         "type": "Adam",

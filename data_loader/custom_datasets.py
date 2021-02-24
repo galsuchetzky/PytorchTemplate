@@ -2,7 +2,7 @@ import torch.utils.data as data
 import numpy as np
 import spacy
 import logging
-import ast
+
 
 from logger.logger import setup_logging, LOGGER_SETUP
 from nlp import load_dataset
@@ -12,7 +12,7 @@ from subprocess import run
 from tester.BREAK_evaluate_predictions import format_qdmr
 from utils.qdmr_identifier import *
 
-DEBUG_EXAMPLES_AMOUNT = 3000
+DEBUG_EXAMPLES_AMOUNT = 300
 
 
 class BREAKLogical(data.Dataset):
@@ -50,7 +50,6 @@ class BREAKLogical(data.Dataset):
 
         self.dataset_logical = self.load_dataset(data_dir, 'logical-forms', self.logger)
 
-        self.lexicon_dict = self.get_lexicon()[self.dataset_split]
         self.logger.info('dataset and lexicon ready.')
 
         # Download spacy language model
@@ -61,7 +60,7 @@ class BREAKLogical(data.Dataset):
         # Prepare the data parts
         self.ids = self.dataset_logical[self.dataset_split]['question_id']
         self.questions = self.dataset_logical[self.dataset_split]['question_text']
-        self.lexicon_dict = self.get_lexicon()[self.dataset_split]
+        self.lexicon_str = self.get_lexicon()[self.dataset_split]
         self.logger.info('dataset and lexicon ready.')
 
         # uses QDMR
@@ -72,7 +71,7 @@ class BREAKLogical(data.Dataset):
             self.ids = self.ids[:DEBUG_EXAMPLES_AMOUNT]
             self.questions = self.questions[:DEBUG_EXAMPLES_AMOUNT]
             self.qdmrs = self.qdmrs[:DEBUG_EXAMPLES_AMOUNT]
-            # self.lexicon_dict = self.lexicon_dict[:DEBUG_EXAMPLES_AMOUNT]
+            self.lexicon_str = self.lexicon_str[:DEBUG_EXAMPLES_AMOUNT]
             self.programs = self.programs[:DEBUG_EXAMPLES_AMOUNT]
 
         # # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
@@ -112,10 +111,10 @@ class BREAKLogical(data.Dataset):
         """
         # example = (self.ids[idx], self.questions[idx], self.qdmrs[idx].to_string())
         golds = self.qdmrs[idx].to_string() if self.gold_type == 'qdmr' else self.programs[idx]
-        # example = (self.ids[idx], self.questions[idx], golds, ';'.join(self.lexicon_dict[idx]))
-        example = (self.ids[idx], self.questions[idx], golds)
+        example = (self.ids[idx], self.questions[idx], golds, self.lexicon_str[idx])
 
-        #todo there is false for some reason in the lexicon
+        # without lexicon
+        # example = (self.ids[idx], self.questions[idx], golds)
         return example
 
     def __len__(self):
@@ -135,24 +134,34 @@ class BREAKLogical(data.Dataset):
         return self[idx]
 
     def create_matching_lexicon(self, dir_path, file_name):
-        # TODO add documentation
+        # There are more examples in the lexicon dataset than in the logical examples
+        # This function creates one-to-one mapping between them and stores lexicon dict in a file
         self.logger.info('Creating lexicon...')
         dataset_qdmr_lexicon = self.load_dataset(dir_path, 'QDMR-lexicon', self.logger)
 
-        lexicon_dict = {'train': dict(), 'validation': dict(), 'test': dict()}
+        lexicon_lists = {'train': [], 'validation': [], 'test': []}
         for data_split in self.dataset_logical:
             lex_idx = 0
             lexicon_split = dataset_qdmr_lexicon[data_split]
             for i, example in enumerate(self.dataset_logical[data_split]):
                 question = example['question_text']
+                lexcion_found = False
                 for j in range(lex_idx, len(lexicon_split)):
                     lexicon_example = lexicon_split[j]
                     if lexicon_example['source'] == question:
-                        lexicon_dict[data_split][i] = lexicon_example['allowed_tokens']
+                        str_lex = lexicon_example['allowed_tokens']
+                        lexicon_lists[data_split].append(str_lex)
+                        # TODO remove, its testing code
+                        #lexicon_dict[data_split][i]
+                        # if str_lex[2] != 'h':
+                        #     print("Holy")
                         lex_idx = j + 1
+                        lexcion_found = True
                         break
-
-        save_obj(dir_path, lexicon_dict, file_name)
+                # if it got here, no matching lexicon found in lexicon file
+                if not lexcion_found:
+                    raise EOFError
+        save_obj(dir_path, lexicon_lists, file_name)
         self.logger.info('Done creating lexicon.')
 
     def get_lexicon(self):
@@ -166,9 +175,9 @@ class BREAKLogical(data.Dataset):
         data = load_obj(dir_path, file_name)
         # TODO these lines turn the string repr of lists to real lists, but slow. save to file or something.
         # TODO uncomment this
-        for type in data:
-            for ex in data[type]:
-                data[type][ex] = ast.literal_eval(data[type][ex])
+        # for type in data:
+        #     for ex in data[type]:
+        #         data[type][ex] = ast.literal_eval(data[type][ex])
         self.logger.info("Lexicon ready.")
         return data
 
