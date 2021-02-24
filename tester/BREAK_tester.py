@@ -37,8 +37,8 @@ class Seq2SeqSimpleTester(BaseTester):
         self.pad_idx = self.vocab['<pad>']
 
         # Overriding the criterion.
-        self.criterion = CrossEntropyLoss(ignore_index=self.pad_idx)
-
+        # self.criterion = CrossEntropyLoss(ignore_index=self.pad_idx)
+        self.criterion = criterion
         super().__init__(model, self.criterion, metric_ftns, config, device, data_loader, evaluation)
 
         self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
@@ -70,10 +70,11 @@ class Seq2SeqSimpleTester(BaseTester):
                 lexicon_ids, mask_lexicon = tokenize_lexicon_str(self.vocab, lexicon_str, self.qdmr_pad_length, self.device)
                 start = time.time()
                 # Run the model on the batch and calculate the loss
-                output = self.model(data, target, lexicon_ids, evaluation_mode=True)
+                output, mask_output = self.model(data, target, lexicon_ids, evaluation_mode=True)
+                loss = self.criterion(output, mask_output, target, mask_target)
                 output = torch.transpose(output, 1, 2)
                 pred = torch.argmax(output, dim=1)
-                loss = self.criterion(output, target)
+
                 start = time.time()
                 # Convert the predictions/ targets/questions from tensor of token_ids to list of strings.
                 # TODO do we need to convert here or can we use the originals? (for data and target)
@@ -136,10 +137,10 @@ class Seq2SeqSimpleTester(BaseTester):
                 lexicon_ids, mask_lexicon = tokenize_lexicon_str(self.vocab, lexicon_str, self.qdmr_pad_length, self.device)
                 start = time.time()
                 # Run the model on the batch and calculate the loss
-                output = self.model(data, target, lexicon_ids, evaluation_mode=True)
+                output, mask_output = self.model(data, target, lexicon_ids, evaluation_mode=True)
+                loss = self.criterion(output, mask_output, target, mask_target)
                 output = torch.transpose(output, 1, 2)
                 pred = torch.argmax(output, dim=1)
-                loss = self.criterion(output, target)
                 start = time.time()
                 # Convert the predictions/ targets/questions from tensor of token_ids to list of strings.
                 # TODO do we need to convert here or can we use the originals? (for data and target)

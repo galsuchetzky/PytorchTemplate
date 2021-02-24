@@ -3,16 +3,19 @@
     "n_gpu": 1,
     "arch": {
         "module": "model.BREAK_model",
-        "type": "EncoderDecoderDynamic",
+        "type": "EncoderDecoder",
         "args": {
             "batch_size": "constants.batch_size",
             "enc_input_size": 256,
             "dec_input_size": 256,
             "enc_hidden_size": 256,
             "dec_hidden_size": 256,
+            "is_dynamic": true,
+            "is_attention": false,
+            "is_copy": false,
             "vocab": {
                 "module": "data_loader.vocabs",
-                "type": "BREAK_vocab_simple",
+                "type": "BREAK_vocab_qdmr",
                 "args": {}
             }
         }
@@ -40,7 +43,7 @@
             "amsgrad": true
         }
     },
-    "loss": "CrossEntropyLoss",
+    "loss": "masked_sequence_cross_entropy_with_logits",
     "metrics": {
         "train_metrics": [],
         "eval_metrics": ["exact_match", "sari_score", "structural_match_ratio"],
@@ -75,6 +78,6 @@
         "examples_amount": 100
     },
     "constants" : {
-        "batch_size": 8
+        "batch_size": 2
     }
 }

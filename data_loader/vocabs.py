@@ -14,14 +14,14 @@ from tester.BREAK_qdmr_to_program import prediction_to_qdmr
 en_tokenizer = get_tokenizer('spacy', language='en_core_web_sm')
 
 
-def BREAK_vocab_simple():
+def BREAK_vocab_qdmr():
     """
     This function builds a vocabulary for the simple seq2seq model of qdmr.
     :return: The vocab.
     """
     # Special characters to include in the vocabulary.
     # TODO move the special tokens (unk, pad ...) to constants out of here.
-    specials = get_specials_simple()
+    specials = get_specials_qdmr()
 
     # Load the dataset and get the words.
     # TODO The dictionary as for now is only created from the training data. maybe change that.
@@ -32,7 +32,7 @@ def BREAK_vocab_simple():
     vocab = build_vocab(specials, dir_path, file_name, sents, en_tokenizer)
     return vocab
 
-def get_specials_simple():
+def get_specials_qdmr():
     """
 
     :return:
@@ -42,7 +42,7 @@ def get_specials_simple():
                 '@@2@@', '@@3@@', '@@4@@', '@@5@@', '@@6@@', '@@7@@', '@@8@@', '@@9@@']
     return specials
 
-def get_specials_logical():
+def get_specials_program():
     """
 
     :return:
@@ -69,13 +69,13 @@ def get_specials_logical():
 
     operators = list(phrases_by_operators.keys())
     phrases = [phrase for phrase_list in phrases_by_operators.values() for phrase in phrase_list]
-    simple_specials = get_specials_simple()
+    simple_specials = get_specials_qdmr()
     specials = operators + simple_specials
     return specials
 
 def BREAK_vocab_logical():
 
-    specials = get_specials_logical()
+    specials = get_specials_program()
 
     # model should learn that after BOS or '@@SEP@@' it should predict operators
     # otherwise, it should predict phrase or other words or '@@SEP@@'
@@ -185,7 +185,7 @@ def tokenize_lexicon_str(vocab, lexicon_str, pad_max_length, device):
         # remove duplicates
         lexicon_words = list(dict.fromkeys(lexicon_words))
 
-        lexicon_words.extend(get_specials_logical())
+        lexicon_words.extend(get_specials_program())
 
         # Pad and create a mask
         padded = ['<pad>'] * pad_max_length

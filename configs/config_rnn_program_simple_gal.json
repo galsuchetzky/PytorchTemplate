@@ -12,7 +12,7 @@
             "dec_hidden_size": 256,
             "vocab": {
                 "module": "data_loader.vocabs",
-                "type": "BREAK_vocab_logical",
+                "type": "BREAK_vocab_program",
                 "args": {}
             }
         }

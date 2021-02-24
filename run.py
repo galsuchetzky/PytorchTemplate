@@ -39,7 +39,8 @@ def run(config, train=True):
         model = torch.nn.DataParallel(model, device_ids=device_ids)
 
     # get function handles of loss and metrics
-    criterion = getattr(module_loss, config['loss'])()
+    # criterion = getattr(module_loss, config['loss'])()
+    criterion = getattr(module_loss, config['loss'])
     train_metric_fns = [getattr(module_metric, met) for met in config['metrics']['train_metrics']]
     eval_metric_fns = [getattr(module_metric, met) for met in config['metrics']['eval_metrics']]
     test_metric_fns = [getattr(module_metric, met) for met in config['metrics']['test_metrics']]

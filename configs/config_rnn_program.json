@@ -3,16 +3,19 @@
     "n_gpu": 1,
     "arch": {
         "module": "model.BREAK_model",
-        "type": "EncoderDecoderSimple",
+        "type": "EncoderDecoder",
         "args": {
             "batch_size": "constants.batch_size",
             "enc_input_size": 256,
             "dec_input_size": 256,
             "enc_hidden_size": 256,
             "dec_hidden_size": 256,
+            "is_dynamic": false,
+            "is_attention": false,
+            "is_copy": false,
             "vocab": {
                 "module": "data_loader.vocabs",
-                "type": "BREAK_vocab_logical",
+                "type": "BREAK_vocab_program",
                 "args": {}
             }
         }

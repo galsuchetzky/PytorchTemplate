@@ -37,7 +37,8 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         self.vocab = model.vocab
         self.pad_idx = self.vocab['<pad>']
         # TODO the loss function should come from the loss.py file. move it there.
-        self.criterion = CrossEntropyLoss(ignore_index=self.pad_idx)
+        # self.criterion = CrossEntropyLoss(ignore_index=self.pad_idx)
+        self.criterion = criterion
         super().__init__(model,
                          self.criterion,
                          train_metric_ftns,
@@ -92,16 +93,18 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
                 lexicon_ids, mask_lexicon = tokenize_lexicon_str(self.vocab, lexicon_str, self.qdmr_pad_length, self.device)
                 # Run the model on the batch
                 self.optimizer.zero_grad()
-                output = self.model(data, target, lexicon_ids)
+                # out shape is (batch_size, seq_len, output_size)
 
-                # loss expects (minibatch, classes, seq_len)
-                # out now is (batch_size, seq_len, output_size)
+                output, mask_output = self.model(data, target, lexicon_ids)
+
+                # CEloss expects (minibatch, classes, seq_len)
                 # out after transpose is (batch_size, output_size, seq_len)
-                output = torch.transpose(output, 1, 2)
+                # output = torch.transpose(output, 1, 2)
 
                 # Calculate the loss and perform optimization step.
                 # TODO test properly use of masks
-                loss = self.criterion(output, target)
+                # output dims should be (batch_size, num_decoding_steps, num_classes)
+                loss = self.criterion(output, mask_output, target, mask_target)
                 loss.backward()
                 self.optimizer.step()
 
