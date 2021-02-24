@@ -1,11 +1,14 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from .base_BREAK_model import BaseBREAKModel
 from .base_model import BaseModel
 from transformers import BartTokenizer, BartForConditionalGeneration
 from utils.util import masked_softmax
 from .loss import masked_sequence_cross_entropy_with_logits
+
+
 # TODO add documentation and shapes everywhere.
 # TODO remove the "your code here" from the models. give credits in a docstring above to the course.
 
@@ -91,13 +94,34 @@ class DecoderRNN(BaseModel):
 
         self.gru_cell = nn.GRUCell(self.input_size, self.hidden_size)
 
-        # for output
+        # for attention
+        # TODO adjust
+        self.enc_hidden_size = enc_hidden_size
+        self.W_a = nn.Linear(self.enc_hidden_size, self.hidden_size)
+
+        # for output without attention
         self.W_s = nn.Linear(self.hidden_size, self.output_size)
+
+        # for output with attention
+        self.W_s_att = nn.Linear(self.hidden_size + self.enc_hidden_size, self.output_size)
         # TODO maybe replace linear layer with embedding matrix - usually tied to encoder embedding matrix)
         # TODO add dropout layers
 
-    def forward(self, targets, h, lexicon_ids, evaluation_mode=False, **kwargs):
-        ### YOUR CODE HERE
+    def CalculateAttention(self, hidden, encoder_hiddens_proj, enc_outputs_matrix):
+        """ Calculates the attention vector. """
+        # TODO adjust this!!!
+        scores = torch.tensordot(encoder_hiddens_proj, hidden)
+
+        # scores dim (1, source_seq_len)
+        scores = scores.unsqueeze(0)
+        # scores = F.softmax(scores, dim=0)
+        scores = F.softmax(scores)
+
+        # result dim (1, enc_hidden_size)
+        result = torch.matmul(scores, enc_outputs_matrix)
+        return result
+
+    def forward(self, targets, h, enc_outputs, lexicon_ids, evaluation_mode=False, **kwargs):
         # if evaluation_mode:
         #     generation_length = 256
         # else:
@@ -115,8 +139,10 @@ class DecoderRNN(BaseModel):
         # targets dim before (batch_size, target_seq_len)
         # targets dim after (batch_size, target_seq_len + 1)
         targets = torch.cat((start_token, targets), dim=1)
+
+        encoder_hiddens_proj = self.W_a(enc_outputs)
+        enc_outputs_matrix = enc_outputs.squeeze()
         # loop through each index in the targets (all the batch targets together), except the last one
-        # TODO in eval mode need to loop until EOS token reached
         # for i in range(generation_length):
         for i, target in enumerate(torch.transpose(targets, 0, 1)[:-1]):
             if evaluation_mode and i > 0:  # use the output of the model rather then the target as input only for evaluation
@@ -143,15 +169,17 @@ class DecoderRNN(BaseModel):
                 mask = (output != fill_value).float()
                 output = masked_softmax(output, mask, dim=-1)
 
+            if self.is_attention:
+                attention_vec = self.CalculateAttention(h, encoder_hiddens_proj, enc_outputs_matrix)
+                # TODO need to consider the mask for the dynamic somehow.
+                output = self.W_s_att(torch.cat((h, attention_vec), dim=1))
+
             outputs.append(output)
             masks.append(mask)
         # outputs dim (batch_size, seq_len, output_size)
         outputs = torch.stack(outputs, dim=1)
         masks = torch.stack(masks, dim=1)
-        ### --------------
         return outputs, masks
-
-
 
 
 class EncoderDecoder(BaseBREAKModel):
@@ -190,8 +218,6 @@ class EncoderDecoder(BaseBREAKModel):
                                   self.SOS_STR, self.EOS_STR, self.device)
 
     def forward(self, input_tensor, target_tensor, lexicon_ids, evaluation_mode=False, **kwargs):
-        # TODO stop predicting when reaching EOS (dont evaluate the rest predicted), but keep predicting for the rest of the batch_length
-        # TODO when in eval_mode do not use target at all
         encoder_hidden_first = self.encoder.init_hidden().to(self.device)
         encoder_outputs, encoder_h_m = self.encoder(input_tensor, encoder_hidden_first)
         decoder_hidden = encoder_h_m
@@ -199,8 +225,6 @@ class EncoderDecoder(BaseBREAKModel):
                                        enc_input=input_tensor, enc_outputs=encoder_outputs)
 
         return decoder_outputs
-
-
 
 
 class BartBREAK(BaseBREAKModel):

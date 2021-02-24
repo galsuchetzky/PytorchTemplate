@@ -10,6 +10,7 @@ from data_loader.custom_datasets import BREAKLogical
 from torchtext.data.utils import get_tokenizer
 from utils.qdmr_identifier import *
 from tester.BREAK_qdmr_to_program import prediction_to_qdmr
+
 # English tokenizer for tokenizing natural language sentences when building a vocabulary.
 en_tokenizer = get_tokenizer('spacy', language='en_core_web_sm')
 
@@ -32,6 +33,7 @@ def BREAK_vocab_qdmr():
     vocab = build_vocab(specials, dir_path, file_name, sents, en_tokenizer)
     return vocab
 
+
 def get_specials_qdmr():
     """
 
@@ -42,11 +44,12 @@ def get_specials_qdmr():
                 '@@2@@', '@@3@@', '@@4@@', '@@5@@', '@@6@@', '@@7@@', '@@8@@', '@@9@@']
     return specials
 
+
 def get_specials_program():
     """
 
     :return:
-    """# operators = ["select", "filter", "project", "aggregate",
+    """  # operators = ["select", "filter", "project", "aggregate",
     #              "group", "superlative", "comparative",
     #              "union", "intersection", "discard",
     #              "sort", "boolean", "arithmetic",
@@ -73,8 +76,8 @@ def get_specials_program():
     specials = operators + simple_specials
     return specials
 
-def BREAK_vocab_program():
 
+def BREAK_vocab_program():
     specials = get_specials_program()
 
     # model should learn that after BOS or '@@SEP@@' it should predict operators
@@ -93,7 +96,6 @@ def BREAK_vocab_program():
     sents = BREAKLogical.load_dataset(dir_path, 'logical-forms')['train']['question_text']
     vocab = build_vocab(specials, dir_path, file_name, sents, en_tokenizer)
     return vocab
-
 
 
 def build_vocab(specials, dir_path, file_name, sents, tokenizer):
@@ -165,6 +167,7 @@ def batch_to_tensor(vocab, batch, pad_max_length, device):
 
     return out_tensor, out_mask
 
+
 def tokenize_lexicon_str(vocab, lexicon_str, pad_max_length, device):
     """
 
@@ -206,6 +209,7 @@ def tokenize_lexicon_str(vocab, lexicon_str, pad_max_length, device):
     out_mask = torch.stack(out_mask).to(device)
     return out_tensor, out_mask
 
+
 def tensor_to_str(vocab, tensor, convert_to_program):
     """
     Converts a tensor of indices to a string.
@@ -215,7 +219,7 @@ def tensor_to_str(vocab, tensor, convert_to_program):
     """
     text = " ".join(vocab.itos[idx] for idx in tensor)
     if convert_to_program:
-        #first convert to untokenized form
+        # first convert to untokenized form
         untokenized = prediction_to_qdmr(text)
         builder = QDMRProgramBuilder(untokenized)
         builder.build()
@@ -252,7 +256,7 @@ def pred_batch_to_str(vocab, pred, convert_to_program):
         pass
     # operations on the mask to find first eos values in the rows
     mask_max_values, mask_max_indices = torch.max(eos_mask, dim=1)
-    #include EOS token
+    # include EOS token
     mask_max_indices = torch.add(mask_max_indices, 1)
     # in case there are rows with no eos
     mask_max_indices[mask_max_values == 0] = pred.shape[1]

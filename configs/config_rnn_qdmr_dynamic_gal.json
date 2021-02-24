@@ -10,7 +10,7 @@
             "dec_input_size": 256,
             "enc_hidden_size": 256,
             "dec_hidden_size": 256,
-            "is_dynamic": false,
+            "is_dynamic": true,
             "is_attention": false,
             "is_copy": false,
             "vocab": {
@@ -29,7 +29,7 @@
             "gold_type": "qdmr",
             "shuffle": true,
             "validation_split": 0,
-            "num_workers": 4
+            "num_workers": 2
         },
         "question_pad_length": 64,
         "qdmr_pad_length": 256,
@@ -78,6 +78,6 @@
         "examples_amount": 100
     },
     "constants" : {
-        "batch_size": 32
+        "batch_size": 16
     }
 }
