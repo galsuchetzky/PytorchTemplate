@@ -121,7 +121,7 @@ class DecoderRNN(BaseModel):
         result = torch.matmul(scores, enc_outputs_matrix)
         return result
 
-    def forward(self, targets, h, enc_outputs, lexicon_ids, evaluation_mode=False, **kwargs):
+    def forward(self, targets, h, lexicon_ids, enc_input, enc_outputs, evaluation_mode=False, **kwargs):
         # if evaluation_mode:
         #     generation_length = 256
         # else:

@@ -78,6 +78,6 @@
         "examples_amount": 100
     },
     "constants" : {
-        "batch_size": 2
+        "batch_size": 16
     }
 }
