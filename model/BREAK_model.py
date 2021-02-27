@@ -161,8 +161,15 @@ class DecoderRNN(BaseModel):
             # h dim (batch_size, hidden_size))
             output = self.W_s(h)
             # output dim (batch_size,output_size)
-            mask = output.new_full((self.batch_size, self.output_size), 1).float()
 
+            # TODO might need to move the attention clause here, before the dynamic clause.
+            if self.is_attention:
+                attention_vec = self.CalculateAttention(h, encoder_hiddens_proj, enc_outputs_matrix)
+                # TODO need to consider the mask for the dynamic somehow, maybe not needed because of the dynamic
+                #  clause.
+                output = self.W_s_att(torch.cat((h, attention_vec), dim=1))
+
+            mask = output.new_full((self.batch_size, self.output_size), 1).float()
 
             if self.is_attention:
                 attention_vec = self.CalculateAttention(h, encoder_hiddens_proj, enc_outputs_matrix)
@@ -183,6 +190,7 @@ class DecoderRNN(BaseModel):
                 if evaluation_mode:
                     # dim =-1 for softmax over each row in the batch
                     output = masked_softmax(output, mask, dim=-1)
+
             outputs.append(output)
             masks.append(mask)
         # outputs dim (batch_size, seq_len, output_size)
