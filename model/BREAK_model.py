@@ -110,15 +110,19 @@ class DecoderRNN(BaseModel):
     def CalculateAttention(self, hidden, encoder_hiddens_proj, enc_outputs_matrix):
         """ Calculates the attention vector. """
         # TODO adjust this!!!
-        scores = torch.tensordot(encoder_hiddens_proj, hidden)
+        # scores = torch.tensordot(encoder_hiddens_proj, hidden)
+        scores = torch.bmm(encoder_hiddens_proj, hidden.unsqueeze(2))
 
         # scores dim (1, source_seq_len)
-        scores = scores.unsqueeze(0)
+        scores = scores.unsqueeze(1).squeeze(-1)
         # scores = F.softmax(scores, dim=0)
-        scores = F.softmax(scores)
+        #TODO is this softmax is done correctly on the batch? i think it should be a masked softmax
+        scores = F.softmax(scores, dim=1)
 
         # result dim (1, enc_hidden_size)
-        result = torch.matmul(scores, enc_outputs_matrix)
+        # result = torch.matmul(scores, enc_outputs_matrix)
+        result = torch.bmm(scores, enc_outputs_matrix)
+        result = result.squeeze(1)
         return result
 
     def forward(self, targets, h, lexicon_ids, enc_input, enc_outputs, evaluation_mode=False, **kwargs):
