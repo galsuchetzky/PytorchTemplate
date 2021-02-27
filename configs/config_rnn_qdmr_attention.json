@@ -26,7 +26,7 @@
         "args": {
             "data_dir": "data/",
             "batch_size": "constants.batch_size",
-            "gold_type": "qdmr",
+            "gold_type": "program",
             "shuffle": true,
             "validation_split": 0,
             "num_workers": 2
