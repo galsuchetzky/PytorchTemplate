@@ -15,7 +15,7 @@
             "is_copy": false,
             "vocab": {
                 "module": "data_loader.vocabs",
-                "type": "BREAK_vocab_qdmr",
+                "type": "BREAK_vocab_program",
                 "args": {}
             }
         }
