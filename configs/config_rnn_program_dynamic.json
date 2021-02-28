@@ -10,12 +10,12 @@
             "dec_input_size": 256,
             "enc_hidden_size": 256,
             "dec_hidden_size": 256,
-            "is_dynamic": false,
-            "is_attention": true,
+            "is_dynamic": true,
+            "is_attention": false,
             "is_copy": false,
             "vocab": {
                 "module": "data_loader.vocabs",
-                "type": "BREAK_vocab_qdmr",
+                "type": "BREAK_vocab_program",
                 "args": {}
             }
         }
@@ -26,7 +26,7 @@
         "args": {
             "data_dir": "data/",
             "batch_size": "constants.batch_size",
-            "gold_type": "qdmr",
+            "gold_type": "program",
             "shuffle": true,
             "validation_split": 0,
             "num_workers": 2
@@ -78,6 +78,6 @@
         "examples_amount": 100
     },
     "constants" : {
-        "batch_size": 16
+        "batch_size": 2
     }
 }
