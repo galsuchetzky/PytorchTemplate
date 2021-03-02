@@ -18,7 +18,7 @@ class EncoderRNN(BaseModel):
     Simple encoder for seq2seq.
     """
 
-    def __init__(self, batch_size, input_size, hidden_size, vocab, device):
+    def __init__(self, batch_size, input_size, hidden_size, vocab, encoder_embedding_weight, device):
         """
         :param input_size: The size of the input tensor.
         :param hidden_size: The size of the hidden state on the RNN.
@@ -29,8 +29,8 @@ class EncoderRNN(BaseModel):
         self.hidden_size = hidden_size
         self.vocab = vocab
 
-        # TODO use padding_idx in embedding
         self.embedding = nn.Embedding(len(self.vocab), hidden_size)
+        self.embedding.weight = encoder_embedding_weight
         self.gru = nn.GRU(input_size, hidden_size, batch_first=True)
 
     def forward(self, input, h_0):
@@ -63,7 +63,7 @@ class DecoderRNN(BaseModel):
     """
 
     def __init__(self, batch_size, input_size, enc_hidden_size, hidden_size, is_dynamic,
-                 is_attention, is_copy, vocab, sos_str, eos_str, device, **kwargs):
+                 is_attention, is_copy, vocab, sos_str, eos_str, tied_weight, device, **kwargs):
         """
         :param input_size: The size of the input tensor.
         :param hidden_size: The size of the hidden states of the decoder.
@@ -85,58 +85,53 @@ class DecoderRNN(BaseModel):
         self.SOS_STR = sos_str
         self.EOS_STR = eos_str
 
-        # TODO use padding_idx in embedding
         self.embedding = nn.Embedding(self.output_size, embedding_dim=self.hidden_size)
 
         # for projecting the last hidden state of the encoder to the decoder space,
         # as the first decoder hidden state, in case the two dimensions don't match
-        self.W_p = nn.Linear(enc_hidden_size, hidden_size)
+        self.W_project_hidden = nn.Linear(enc_hidden_size, hidden_size)
 
         self.gru_cell = nn.GRUCell(self.input_size, self.hidden_size)
 
         # for attention
-        # TODO adjust
-        self.enc_hidden_size = enc_hidden_size
-        self.W_a = nn.Linear(self.enc_hidden_size, self.hidden_size)
+        self.W_project_outputs = nn.Linear(self.enc_hidden_size, self.hidden_size)
+        self.W_attn_combine = nn.Linear(2 * self.hidden_size, self.hidden_size)
 
-        # for output without attention
-        self.W_s = nn.Linear(self.hidden_size, self.output_size)
+        # for output
+        self.W_out = nn.Linear(self.hidden_size, self.output_size)
+        if self.is_copy:
+            self.embedding.weight = tied_weight
+            self.W_out.weight = tied_weight
 
-        # for output with attention
-        self.W_s_att = nn.Linear(self.hidden_size + self.enc_hidden_size, self.output_size)
-        # TODO maybe replace linear layer with embedding matrix - usually tied to encoder embedding matrix)
-        # TODO add dropout layers
+        print("hi")
 
-    def CalculateAttention(self, hidden, encoder_hiddens_proj, enc_outputs_matrix):
+    def CalculateAttention(self, hidden, encoder_hiddens_proj):
         """ Calculates the attention vector. """
-        # TODO adjust this!!!
-        # scores = torch.tensordot(encoder_hiddens_proj, hidden)
+        # TODO explanation https://stackoverflow.com/a/50829107/15281056
+        # encoder_hiddens_proj dim (batch_size, question_length, hidden_size)
+        # scores dim (batch_size, source_seq_len, 1)
         scores = torch.bmm(encoder_hiddens_proj, hidden.unsqueeze(2))
 
-        # scores dim (1, source_seq_len)
-        scores = scores.unsqueeze(1).squeeze(-1)
-        # scores = F.softmax(scores, dim=0)
-        #TODO is this softmax is done correctly on the batch? i think it should be a masked softmax
-        scores = F.softmax(scores, dim=1)
+        # reshape to match encoder. dim (batch_size, 1, source_seq_len)
+        reshaped_scores = scores.unsqueeze(1).squeeze(-1)
+        # softmax over tokens of the question
+        reshaped_scores = F.softmax(reshaped_scores, dim=2)
 
-        # result dim (1, enc_hidden_size)
-        # result = torch.matmul(scores, enc_outputs_matrix)
-        result = torch.bmm(scores, enc_outputs_matrix)
+        # result dim (batch_size, hidden_size)
+        result = torch.bmm(reshaped_scores, encoder_hiddens_proj)
         result = result.squeeze(1)
         return result
 
     def forward(self, targets, h, lexicon_ids, enc_input, enc_outputs, evaluation_mode=False, **kwargs):
-        # if evaluation_mode:
-        #     generation_length = 256
-        # else:
-        #     generation_length = len(targets)
-        outputs = []  # For keeping the outputs
+
+        outputs = []
         masks = []
         # h dim before (1,batch_size, enc_hidden_size)
         # h dim after (batch_size, hidden_size)
-        h = self.W_p(h).squeeze(0)  # Project the last hidden state of the encoder to the input size of the decoder.
-        # start_token = torch.tensor(self.vocab[self.SOS_STR], device=self.device).view(1, -1)
+        # Project the last hidden state of the encoder to the input size of the decoder.
+        h = self.W_project_hidden(h).squeeze(0)
 
+        # start_token = torch.tensor(self.vocab[self.SOS_STR], device=self.device).view(1, -1)
         start_token = torch.full(size=(self.batch_size, 1), fill_value=self.vocab[self.SOS_STR], device=self.device)
         # end_token = torch.full(size=(self.batch_size, 1), fill_value=self.vocab[self.EOS_STR], device=self.device)
 
@@ -144,10 +139,11 @@ class DecoderRNN(BaseModel):
         # targets dim after (batch_size, target_seq_len + 1)
         targets = torch.cat((start_token, targets), dim=1)
 
-        encoder_hiddens_proj = self.W_a(enc_outputs)
-        enc_outputs_matrix = enc_outputs.squeeze()
+        # enc_outputs dim (batch_size, question_length, enc_hidden_size)
+        # encoder_hiddens_proj dim (batch_size, question_length, hidden_size)
+        encoder_hiddens_proj = self.W_project_outputs(enc_outputs)
+
         # loop through each index in the targets (all the batch targets together), except the last one
-        # for i in range(generation_length):
         for i, target in enumerate(torch.transpose(targets, 0, 1)[:-1]):
             if evaluation_mode and i > 0:  # use the output of the model rather then the target as input only for evaluation
                 argmax_idx = torch.tensor(torch.argmax(output, dim=1))
@@ -157,40 +153,32 @@ class DecoderRNN(BaseModel):
             # target dim (batch_size)
             # input dim  (batch_size, hidden_size)
 
+            # h dim (batch_size, hidden_size)
             h = self.gru_cell(input, h)
-            # h dim (batch_size, hidden_size))
-            output = self.W_s(h)
-            # output dim (batch_size,output_size)
-
-            # TODO might need to move the attention clause here, before the dynamic clause.
-            if self.is_attention:
-                attention_vec = self.CalculateAttention(h, encoder_hiddens_proj, enc_outputs_matrix)
-                # TODO need to consider the mask for the dynamic somehow, maybe not needed because of the dynamic
-                #  clause.
-                output = self.W_s_att(torch.cat((h, attention_vec), dim=1))
-
-            mask = output.new_full((self.batch_size, self.output_size), 1).float()
 
             if self.is_attention:
-                attention_vec = self.CalculateAttention(h, encoder_hiddens_proj, enc_outputs_matrix)
-                # TODO need to consider the mask for the dynamic somehow.
-                output = self.W_s_att(torch.cat((h, attention_vec), dim=1))
-
+                attention_vec = self.CalculateAttention(h, encoder_hiddens_proj)
+                last_hidden = self.W_attn_combine(torch.cat((h, attention_vec), dim=1))
+                last_hidden = F.relu(last_hidden)
+            else:
+                last_hidden = h
             # TODO it must be the last computation in each loop
+            # output dim (batch_size,output_size)
+            output = self.W_out(last_hidden)
             if self.is_dynamic:
                 fill_value = -1e32
                 # the returned Tensor has the same torch.dtype and torch.device as this tensor
                 lexicon_adjustment = output.new_full((self.batch_size, self.output_size), fill_value)
                 lexicon_adjustment[torch.arange(self.batch_size).unsqueeze(1), lexicon_ids] = 0
                 output += lexicon_adjustment
-                # TODO credit https://github.com/tomerwolgithub/Break
                 # we take masked softmax in order to drop thousands of irrelevant classes in loss calc
                 mask = (lexicon_adjustment != fill_value).float()
                 # perform softmax only in evaluation mode. during training it is part of the loss
                 if evaluation_mode:
                     # dim =-1 for softmax over each row in the batch
                     output = masked_softmax(output, mask, dim=-1)
-
+            else:
+                mask = output.new_full((self.batch_size, self.output_size), 1).float()
             outputs.append(output)
             masks.append(mask)
         # outputs dim (batch_size, seq_len, output_size)
@@ -229,10 +217,16 @@ class EncoderDecoder(BaseBREAKModel):
         self.is_dynamic = is_dynamic
         self.is_attention = is_attention
         self.is_copy = is_copy
-        self.encoder = EncoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.vocab, self.device)
+        self.encoder_embedding = nn.Embedding(self.output_size, embedding_dim=self.enc_hidden_size)
+        if self.is_copy:
+            if self.enc_hidden_size != self.dec_hidden_size:
+                raise ValueError('When using the tied flag, enc_hidden_size must be equal to dec_hidden_size')
+
+        self.encoder = EncoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.vocab,
+                                  self.encoder_embedding.weight, self.device)
         self.decoder = DecoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.dec_hidden_size,
                                   self.is_dynamic, self.is_attention, self.is_copy, self.vocab,
-                                  self.SOS_STR, self.EOS_STR, self.device)
+                                  self.SOS_STR, self.EOS_STR, self.encoder_embedding.weight, self.device)
 
     def forward(self, input_tensor, target_tensor, lexicon_ids, evaluation_mode=False, **kwargs):
         encoder_hidden_first = self.encoder.init_hidden().to(self.device)
@@ -242,9 +236,3 @@ class EncoderDecoder(BaseBREAKModel):
                                        enc_input=input_tensor, enc_outputs=encoder_outputs)
 
         return decoder_outputs
-
-
-class BartBREAK(BaseBREAKModel):
-    def __init__(self, batch_size, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, vocab, device):
-        self.model = BartForConditionalGeneration.from_pretrained('facebook/bart-base')
-        self.tokenizer = BartTokenizer.from_pretrained('facebook/bart-base')

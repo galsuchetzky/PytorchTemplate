@@ -221,7 +221,13 @@
 
 #---------------------------------------------------------------------------------------------------------------
 import torch
-a = ['b','c', 'v']
-b=['e','t']
-print(a+b)
-# print(torch.arange(a.size(0)).unsqueeze(1).shape)
+batch_size = 3
+question_length =6
+hidden_size = 4
+hidden = torch.randn(batch_size, hidden_size, device='cuda')
+hidden = hidden.unsqueeze(2)
+outputs = torch.randn(batch_size, question_length, hidden_size, device='cuda')
+out = torch.bmm(outputs, hidden).unsqueeze(1).squeeze(-1)
+
+print(out.shape)
+# question_length,

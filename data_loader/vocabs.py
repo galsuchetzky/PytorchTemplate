@@ -73,7 +73,7 @@ def get_specials_program():
     sep_specials = ['@@OP_SEP@@', '@@ARG_SEP@@', '@@REF@@']
 
     operators = list(phrases_by_operators.keys())
-    phrases = [phrase for phrase_list in phrases_by_operators.values() for phrase in phrase_list]
+    # phrases = [phrase for phrase_list in phrases_by_operators.values() for phrase in phrase_list]
     simple_specials = get_specials_qdmr()
     specials = operators + simple_specials + sep_specials
     return specials
