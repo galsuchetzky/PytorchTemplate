@@ -29,7 +29,7 @@
             "gold_type": "program",
             "shuffle": true,
             "validation_split": 0,
-            "num_workers": 2
+            "num_workers": 4
         },
         "question_pad_length": 64,
         "qdmr_pad_length": 256,

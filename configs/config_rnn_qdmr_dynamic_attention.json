@@ -29,7 +29,7 @@
             "gold_type": "qdmr",
             "shuffle": true,
             "validation_split": 0,
-            "num_workers": 2
+            "num_workers": 4
         },
         "question_pad_length": 64,
         "qdmr_pad_length": 256,
@@ -78,6 +78,6 @@
         "examples_amount": 100
     },
     "constants" : {
-        "batch_size": 2
+        "batch_size": 32
     }
 }
