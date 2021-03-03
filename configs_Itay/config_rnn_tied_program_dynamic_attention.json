@@ -12,7 +12,7 @@
             "dec_hidden_size": 256,
             "is_dynamic": true,
             "is_attention": true,
-            "is_tied_weights": false,
+            "is_tied_weights": true,
             "vocab": {
                 "module": "data_loader.vocabs",
                 "type": "BREAK_vocab_program",
@@ -59,12 +59,12 @@
     "trainer": {
         "module" : "trainer.BREAK_trainer",
         "type": "Seq2SeqSimpleTrainer",
-        "epochs": 10,
+        "epochs": 20,
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 1,
         "monitor": "max val_sari_score",
-        "early_stop": 10,
+        "early_stop": 4,
         "tensorboard": true,
         "best_model_metrics_log": "epoch loss val_loss val_exact_match val_sari_score val_structural_match_ratio"
     },
@@ -78,6 +78,6 @@
         "examples_amount": 100
     },
     "constants" : {
-        "batch_size": 16
+        "batch_size": 32
     }
 }

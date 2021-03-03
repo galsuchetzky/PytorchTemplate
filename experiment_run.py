@@ -18,7 +18,9 @@ configurations = [
 test_configs = [
     'configs/config_rnn_tied_program_attention.json'
 ]
-
+test_configurations = [
+    'configs_Itay/config_rnn_tied_program.json'
+]
 command = 'python train.py -c '
 debug = ' --debug True'
 
@@ -26,6 +28,7 @@ start_time = time()
 
 for configuration in configurations:
     experiment = command + configuration# + debug
+
     print('running experiment: ', configuration)
     os.system(experiment)
 
