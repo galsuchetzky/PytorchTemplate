@@ -1,4 +1,5 @@
 import os
+from time import time
 
 configurations = [
     'configs/config_rnn_qdmr.json',
@@ -14,7 +15,13 @@ configurations = [
 command = 'python train.py -c '
 debug = ' --debug True'
 
+start_time = time()
+
 for configuration in configurations:
-    experiment = command + configuration + debug
+    experiment = command + configuration # + debug
     print('running experiment: ', configuration)
     os.system(experiment)
+
+end_time = time()
+
+print("total experimenting time: ", end_time - start_time)
