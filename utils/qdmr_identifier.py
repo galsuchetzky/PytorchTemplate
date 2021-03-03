@@ -126,7 +126,8 @@ class QDMRProgramBuilder(object):
             self.get_operators()
             self.build_steps()
         except:
-            print("Unable to identify all steps: %s" % self.qdmr_text)
+            # print("Unable to identify all steps: %s" % self.qdmr_text)
+            pass
         return True
 
     def build_steps(self):
@@ -137,7 +138,7 @@ class QDMRProgramBuilder(object):
             try:
                 step = step_identifier.identify(step_text)
             except:
-                print("Unable to identify step: %s" % step_text)
+                # print("Unable to identify step: %s" % step_text)
                 step = None
             self.steps += [step]
         return self.steps

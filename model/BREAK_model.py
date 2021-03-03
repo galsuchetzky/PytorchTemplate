@@ -63,7 +63,7 @@ class DecoderRNN(BaseModel):
     """
 
     def __init__(self, batch_size, input_size, enc_hidden_size, hidden_size, is_dynamic,
-                 is_attention, is_copy, vocab, sos_str, eos_str, tied_weight, device, **kwargs):
+                 is_attention, is_tied_weights, vocab, sos_str, eos_str, tied_weight, device, **kwargs):
         """
         :param input_size: The size of the input tensor.
         :param hidden_size: The size of the hidden states of the decoder.
@@ -78,7 +78,7 @@ class DecoderRNN(BaseModel):
         self.enc_hidden_size = enc_hidden_size
         self.is_dynamic = is_dynamic
         self.is_attention = is_attention
-        self.is_copy = is_copy
+        self.is_tied_weights = is_tied_weights
 
         self.vocab = vocab
         self.output_size = len(self.vocab)
@@ -99,7 +99,7 @@ class DecoderRNN(BaseModel):
 
         # for output
         self.W_out = nn.Linear(self.hidden_size, self.output_size)
-        if self.is_copy:
+        if self.is_tied_weights:
             self.embedding.weight = tied_weight
             self.W_out.weight = tied_weight
 
@@ -115,6 +115,7 @@ class DecoderRNN(BaseModel):
         # reshape to match encoder. dim (batch_size, 1, source_seq_len)
         reshaped_scores = scores.unsqueeze(1).squeeze(-1)
         # softmax over tokens of the question
+        # TODO maybe change to dim 1
         reshaped_scores = F.softmax(reshaped_scores, dim=2)
 
         # result dim (batch_size, hidden_size)
@@ -193,7 +194,7 @@ class EncoderDecoder(BaseBREAKModel):
     """
 
     def __init__(self, batch_size, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, is_dynamic,
-                 is_attention, is_copy, vocab, device):
+                 is_attention, is_tied_weights, vocab, device):
         """
         :param enc_input_size: The dimension of the input embeddings for the encoder.
         :param dec_input_size: The dimension of the input embeddings for the decoder.
@@ -216,16 +217,16 @@ class EncoderDecoder(BaseBREAKModel):
         self.EOS_STR = '<eos>'
         self.is_dynamic = is_dynamic
         self.is_attention = is_attention
-        self.is_copy = is_copy
+        self.is_tied_weights = is_tied_weights
         self.encoder_embedding = nn.Embedding(self.output_size, embedding_dim=self.enc_hidden_size)
-        if self.is_copy:
+        if self.is_tied_weights:
             if self.enc_hidden_size != self.dec_hidden_size:
                 raise ValueError('When using the tied flag, enc_hidden_size must be equal to dec_hidden_size')
 
         self.encoder = EncoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.vocab,
                                   self.encoder_embedding.weight, self.device)
         self.decoder = DecoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.dec_hidden_size,
-                                  self.is_dynamic, self.is_attention, self.is_copy, self.vocab,
+                                  self.is_dynamic, self.is_attention, self.is_tied_weights, self.vocab,
                                   self.SOS_STR, self.EOS_STR, self.encoder_embedding.weight, self.device)
 
     def forward(self, input_tensor, target_tensor, lexicon_ids, evaluation_mode=False, **kwargs):
