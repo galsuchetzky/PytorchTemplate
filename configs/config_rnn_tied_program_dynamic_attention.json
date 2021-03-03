@@ -11,8 +11,8 @@
             "enc_hidden_size": 256,
             "dec_hidden_size": 256,
             "is_dynamic": true,
-            "is_attention": false,
-            "is_tied_weights": false,
+            "is_attention": true,
+            "is_tied_weights": true,
             "vocab": {
                 "module": "data_loader.vocabs",
                 "type": "BREAK_vocab_program",
@@ -78,6 +78,6 @@
         "examples_amount": 100
     },
     "constants" : {
-        "batch_size": 16
+        "batch_size": 32
     }
 }
