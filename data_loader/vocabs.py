@@ -211,6 +211,16 @@ def tokenize_lexicon_str(vocab, lexicon_str, pad_max_length, device):
     out_mask = torch.stack(out_mask).to(device)
     return out_tensor, out_mask
 
+def minimize_program(program):
+    """
+    :param program:
+    :return: program without anchor tokens
+    """
+    ARG_SEP = '@@ARG_SEP@@ '
+    OP_SEP = '@@OP_SEP@@ '
+    minimized = program.replace(ARG_SEP, "")
+    minimized = minimized.replace(OP_SEP, "")
+    return minimized
 
 def tensor_to_str(vocab, tensor, convert_to_program):
     """
@@ -226,6 +236,7 @@ def tensor_to_str(vocab, tensor, convert_to_program):
         builder = QDMRProgramBuilder(untokenized)
         builder.build()
         text = str(builder)
+        text = minimize_program(text)
     return text
 
 

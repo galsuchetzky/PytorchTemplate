@@ -27,9 +27,10 @@
             "data_dir": "data/",
             "batch_size": "constants.batch_size",
             "gold_type": "program",
+            "domain_split": true,
             "shuffle": true,
             "validation_split": 0,
-            "num_workers": 4
+            "num_workers": 1
         },
         "question_pad_length": 64,
         "qdmr_pad_length": 256,

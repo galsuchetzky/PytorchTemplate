@@ -3,7 +3,6 @@ import numpy as np
 import spacy
 import logging
 
-
 from logger.logger import setup_logging, LOGGER_SETUP
 from nlp import load_dataset
 from pathlib import Path
@@ -20,7 +19,7 @@ class BREAKLogical(data.Dataset):
     The Break dataset: https://github.com/allenai/Break.
     """
 
-    def __init__(self, data_dir, gold_type, train=True, valid=False, debug=False):
+    def __init__(self, data_dir, gold_type, domain_split, train=True, valid=False, debug=False):
         """
         Initiates the Bread dataset.
         :param data_dir (str):  Path to the data in which to save/ from which to read the dataset.
@@ -38,7 +37,7 @@ class BREAKLogical(data.Dataset):
         super(BREAKLogical, self).__init__()
 
         self.gold_type = gold_type
-
+        self.domain_split = domain_split
         # Load dataset and lexicon
         self.dataset_split = 'test'
         if train:
@@ -48,9 +47,13 @@ class BREAKLogical(data.Dataset):
 
         self.logger.info('loading data split:' + self.dataset_split)
 
+        self.logger.info('loading vanilla dataset')
         self.dataset_logical = self.load_dataset(data_dir, 'logical-forms', self.logger)
+        if self.domain_split:
+            self.logger.info('loading domain split dataset')
+            self.dataset_logical = self.load_domain_split_dataset(data_dir, self.logger)
 
-        self.logger.info('dataset and lexicon ready.')
+        self.logger.info('dataset ready.')
 
         # Download spacy language model
         if not spacy.util.is_package("en_core_web_sm"):
@@ -60,13 +63,14 @@ class BREAKLogical(data.Dataset):
         # Prepare the data parts
         self.ids = self.dataset_logical[self.dataset_split]['question_id']
         self.questions = self.dataset_logical[self.dataset_split]['question_text']
+        # lexicon is based on vanilla/ domain_split type of dataset_logical
         self.lexicon_str = self.get_lexicon()[self.dataset_split]
         self.logger.info('dataset and lexicon ready.')
 
         # uses QDMR
         self.qdmrs = [format_qdmr(decomp) for decomp in self.dataset_logical[self.dataset_split]["decomposition"]]
-        # TODO empty string for test
         self.programs = self.get_programs()
+
         if debug:
             self.ids = self.ids[:DEBUG_EXAMPLES_AMOUNT]
             self.questions = self.questions[:DEBUG_EXAMPLES_AMOUNT]
@@ -79,6 +83,37 @@ class BREAKLogical(data.Dataset):
 
     def get_dataset_split(self):
         return self.dataset_split
+
+    def load_domain_split_dataset(self, data_dir, logger=None):
+        """
+        Loads break dataset with domain split. Train - on text. val + test - on DB + images
+        :param data_dir: The path of the directory where the preprocessed dataset should be saved to or loaded from.
+        :param logger: A logger for logging events.
+        :return: The loaded dataset.
+        """
+        current_dir = Path()
+        dir_path = current_dir / "data" / "break_data" / "preprocessed"
+        file_name = "dataset_preprocessed_domain_split.pkl"
+        if not (dir_path / file_name).is_file():
+            if logger:
+                logger.info('Creating domain split dataset...')
+            text_domain_dataset_prefixes = ('COMQA', 'CWQ', 'DROP', 'HOTP')
+            image_domain_dataset_prefixes = ('CLEVR', 'NLVR2')
+            DB_domain_dataset_prefixes = ('ACADEMIC', 'ATIS', 'GEO', 'SPIDER')
+            image_plus_DB = image_domain_dataset_prefixes + DB_domain_dataset_prefixes
+            train_dataset = self.dataset_logical['train'].filter(
+                lambda example: example['question_id'].startswith(text_domain_dataset_prefixes))
+            validation_dataset = self.dataset_logical['validation'].filter(
+                lambda example: example['question_id'].startswith(image_plus_DB))
+            test_dataset = self.dataset_logical['test'].filter(
+                lambda example: example['question_id'].startswith(image_plus_DB))
+
+            # to_save = {'counter': counter, 'specials': specials}
+            to_save = {'train': train_dataset, 'validation': validation_dataset, 'test': test_dataset}
+            save_obj(dir_path, to_save, file_name)
+
+        dataset = load_obj(dir_path, file_name)
+        return dataset
 
     @staticmethod
     def load_dataset(data_dir, dataset_split, logger=None):
@@ -152,7 +187,7 @@ class BREAKLogical(data.Dataset):
                         str_lex = lexicon_example['allowed_tokens']
                         lexicon_lists[data_split].append(str_lex)
                         # TODO remove, its testing code
-                        #lexicon_dict[data_split][i]
+                        # lexicon_dict[data_split][i]
                         # if str_lex[2] != 'h':
                         #     print("Holy")
                         lex_idx = j + 1
@@ -169,7 +204,10 @@ class BREAKLogical(data.Dataset):
         self.logger.info("Preparing lexicon...")
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "lexicon_by_logical"
-        file_name = "lexicon.pkl"
+        file_name = "lexicon"
+        if self.domain_split:
+            file_name += "_domain_split"
+        file_name += ".pkl"
         if not (dir_path / file_name).is_file():
             self.create_matching_lexicon(dir_path, file_name)
         data = load_obj(dir_path, file_name)
@@ -197,7 +235,7 @@ class BREAKLogical(data.Dataset):
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "programs"
 
-        file_name = "programs_" + self.dataset_split +".pkl"
+        file_name = "programs_" + self.dataset_split + ".pkl"
         if not (dir_path / file_name).is_file():
             self.create_matching_programs(dir_path, file_name)
         data = load_obj(dir_path, file_name)

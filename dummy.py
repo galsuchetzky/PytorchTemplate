@@ -190,29 +190,29 @@
 # # print(c)
 #
 #
-# from model.metric import ged_score_decomp
-# from tester.BREAK_evaluate_predictions import format_qdmr
-# from utils.qdmr_identifier import *
+from model.metric import ged_score_decomp
+from tester.BREAK_evaluate_predictions import format_qdmr
+from utils.qdmr_identifier import *
+
+# gold_str = [
+#     'return H. V. Jagadish ;return papers of #1 ;return #2 that  are on PVLDB ;return citations of #3 ;return number '
+#     'of  #4 for each #3 ;return #3 where #5 is  higher than 200']
 #
-# # gold_str = [
-# #     'return H. V. Jagadish ;return papers of #1 ;return #2 that  are on PVLDB ;return citations of #3 ;return number '
-# #     'of  #4 for each #3 ;return #3 where #5 is  higher than 200']
-# #
-# # pred_str = [
-# #     'return H. V. Jagadish']
-#
-# # gold = [format_qdmr(decomp) for decomp in gold_str]
-# # pred = [format_qdmr(decomp) for decomp in pred_str]
-#
-#
+# pred_str = [
+#     'return H. V. Jagadish']
+
+# gold = [format_qdmr(decomp) for decomp in gold_str]
+# pred = [format_qdmr(decomp) for decomp in pred_str]
+
+
 # qdmr = "return H. V. Jagadish ;return papers of #1 ;return #2 that  are on PVLDB ;return citations of #3 ;return number of  #4 for each #3 ;return #3 where #5 is  higher than 200"
 # print("* Original QDMR: \n%s\n" % qdmr)
 # builder = QDMRProgramBuilder(qdmr)
 # builder.build()
 # program = str(builder)
 # print("* Identified steps: \n%a\n" % program)
-# # steps = [str(step) for step in builder.steps]
-# # print("* Identified steps: \n%a\n" % steps)
+# steps = [str(step) for step in builder.steps]
+# print("* Identified steps: \n%a\n" % steps)
 # ops = [str(op) for op in builder.operators]
 # print("* Identified operators: \n%a\n" % ops)
 # # convert gold_qdmrs to logical_forms
@@ -221,13 +221,10 @@
 
 #---------------------------------------------------------------------------------------------------------------
 import torch
-batch_size = 3
-question_length =6
-hidden_size = 4
-hidden = torch.randn(batch_size, hidden_size, device='cuda')
-hidden = hidden.unsqueeze(2)
-outputs = torch.randn(batch_size, question_length, hidden_size, device='cuda')
-out = torch.bmm(outputs, hidden).unsqueeze(1).squeeze(-1)
+a_string = "select @@OP_SEP@@ H. V. Jagadish @@SEP@@ project @@OP_SEP@@ papers of @@REF@@ @@ARG_SEP@@ @@1@@ @@SEP@@ filter @@OP_SEP@@ @@2@@ @@ARG_SEP@@ that are on PVLDB @@SEP@@ project @@OP_SEP@@ citations of @@REF@@ @@ARG_SEP@@ @@3@@ @@SEP@@ group @@OP_SEP@@ count @@ARG_SEP@@ @@4@@ @@ARG_SEP@@ @@3@@ @@SEP@@ comparative @@OP_SEP@@ @@3@@ @@ARG_SEP@@ @@5@@ @@ARG_SEP@@ is higher than 200"
+new_string = a_string.replace("@@OP_SEP@@ ", "")
+new_string = new_string.replace("@@ARG_SEP@@ ", "")
 
-print(out.shape)
+print(new_string)
+
 # question_length,

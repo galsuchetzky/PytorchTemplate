@@ -7,7 +7,7 @@ class BREAKDataLoader(BaseDataLoader):
     Class for loading the Break dataset (logical-forms).
     """
 
-    def __init__(self, data_dir, batch_size, gold_type, shuffle=True, validation_split=0.0, num_workers=1, training=True,
+    def __init__(self, data_dir, batch_size, gold_type, domain_split, shuffle=True, validation_split=0.0, num_workers=1, training=True,
                  debug=False):
         """
         Initiates the Break dataset loader and the superclass.
@@ -22,7 +22,8 @@ class BREAKDataLoader(BaseDataLoader):
         """
         self.data_dir = data_dir
         self.gold_type = gold_type
-        self.dataset = custom_datasets.BREAKLogical(self.data_dir, gold_type, train=training, valid=False, debug=debug)
+        self.domain_split = domain_split
+        self.dataset = custom_datasets.BREAKLogical(self.data_dir, gold_type, domain_split, train=training, valid=False, debug=debug)
         self.dataset_split = self.dataset.get_dataset_split()
         if self.dataset_split == 'test':
             self.shuffle = False
@@ -39,7 +40,7 @@ class BREAKDataLoader(BaseDataLoader):
         Defines a dataloader for the validation split.
         :return: The generated dataloader.
         """
-        return BREAKDataLoaderValid(self.data_dir, self.batch_size, self.gold_type, self.shuffle, self.validation_split,
+        return BREAKDataLoaderValid(self.data_dir, self.batch_size, self.gold_type, self.domain_split, self.shuffle, self.validation_split,
                                     self.num_workers, debug=self.debug)
 
     def get_dataset_split(self):
@@ -60,11 +61,12 @@ class BREAKDataLoaderValid(BaseDataLoader):
     Class for loading the validation data for BREAK.
     """
 
-    def __init__(self, data_dir, batch_size, gold_type, shuffle=True, validation_split=0.0, num_workers=1, training=True,
+    def __init__(self, data_dir, batch_size, gold_type, domain_split, shuffle=True, validation_split=0.0, num_workers=1, training=True,
                  debug=False):
         self.data_dir = data_dir
         self.gold_type = gold_type
-        self.dataset = custom_datasets.BREAKLogical(self.data_dir, gold_type, train=training, valid=True, debug=debug)
+        self.domain_split = domain_split
+        self.dataset = custom_datasets.BREAKLogical(self.data_dir, gold_type, domain_split, train=training, valid=True, debug=debug)
         self.dataset_split = self.dataset.get_dataset_split()
         self.drop_last = True
         super().__init__(self.dataset, batch_size, shuffle, validation_split, num_workers, drop_last=self.drop_last)
