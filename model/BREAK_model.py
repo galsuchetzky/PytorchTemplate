@@ -129,9 +129,9 @@ class DecoderRNN(BaseModel):
         self.dropout = nn.Dropout(p=dropout_rate)
 
         if is_xavier:
-            torch.nn.init.xavier_uniform(self.W_project_hidden.weight)
-            torch.nn.init.xavier_uniform(self.W_project_outputs.weight)
-            torch.nn.init.xavier_uniform(self.W_attn_combine.weight)
+            torch.nn.init.xavier_uniform_(self.W_project_hidden.weight)
+            torch.nn.init.xavier_uniform_(self.W_project_outputs.weight)
+            torch.nn.init.xavier_uniform_(self.W_attn_combine.weight)
 
         # for output
         self.W_out = nn.Linear(self.hidden_size, self.output_size)
@@ -271,7 +271,7 @@ class EncoderDecoder(BaseBREAKModel):
         self.is_multilayer = is_multilayer
         self.is_optimal_encoder = is_optimal_encoder
         self.encoder_embedding = nn.Embedding(self.output_size, embedding_dim=self.enc_hidden_size)
-        torch.nn.init.xavier_uniform(self.encoder_embedding.weight)
+        torch.nn.init.xavier_uniform_(self.encoder_embedding.weight)
         if self.is_tied_weights:
             if self.enc_hidden_size != self.dec_hidden_size:
                 raise ValueError('When using the tied flag, enc_hidden_size must be equal to dec_hidden_size')

@@ -8,7 +8,7 @@ from logger.logger import setup_logging, LOGGER_SETUP
 from nlp import load_dataset
 from datasets import Dataset
 from pathlib import Path
-from utils.util import save_obj, load_obj, read_json, write_json
+from utils.util import save_obj, load_obj, read_json, write_json, minimize_program
 from subprocess import run
 from tester.BREAK_evaluate_predictions import format_qdmr
 from utils.qdmr_identifier import *
@@ -204,7 +204,12 @@ class BREAKLogical(data.Dataset):
         :return: The retrieved example.
         """
         # example = (self.ids[idx], self.questions[idx], self.qdmrs[idx].to_string())
-        golds = self.qdmrs[idx].to_string() if self.gold_type == 'qdmr' else self.programs[idx]
+        if self.gold_type == 'qdmr':
+            golds = self.qdmrs[idx].to_string()
+        elif self.gold_type == 'program':
+            golds = self.programs[idx]
+        elif self.gold_type == 'minimized_program':
+            golds = minimize_program(self.programs[idx])
         example = (self.ids[idx], self.questions[idx], golds, self.lexicon_str[idx])
 
         # without lexicon
