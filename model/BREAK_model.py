@@ -40,14 +40,13 @@ class EncoderRNN(BaseModel):
         :param h_0: The final hidden state.
         :return: the output of the sequence and the initial hidden state.
         """
-        ### YOUR CODE HERE
         # input dim: (batch_size, seq_len)
         # input_embed dim: (batch_size, seq_len, hidden_size)
         input_embeds = self.embedding(input)
         # h_0 shape: (1,batch_size,hidden_size)
         # output shape: (batch_size, seq_len, hidden_size)
         output, h_0 = self.gru(input_embeds, h_0)
-        ### --------------
+
         return output, h_0
 
     def init_hidden(self):
@@ -90,20 +89,21 @@ class DecoderRNN(BaseModel):
         # for projecting the last hidden state of the encoder to the decoder space,
         # as the first decoder hidden state, in case the two dimensions don't match
         self.W_project_hidden = nn.Linear(enc_hidden_size, hidden_size)
+        torch.nn.init.xavier_uniform(self.W_project_hidden.weight)
 
         self.gru_cell = nn.GRUCell(self.input_size, self.hidden_size)
 
         # for attention
         self.W_project_outputs = nn.Linear(self.enc_hidden_size, self.hidden_size)
+        torch.nn.init.xavier_uniform(self.W_project_outputs.weight)
         self.W_attn_combine = nn.Linear(2 * self.hidden_size, self.hidden_size)
+        torch.nn.init.xavier_uniform(self.W_attn_combine.weight)
 
         # for output
         self.W_out = nn.Linear(self.hidden_size, self.output_size)
         if self.is_tied_weights:
             self.embedding.weight = tied_weight
             self.W_out.weight = tied_weight
-
-        print("hi")
 
     def CalculateAttention(self, hidden, encoder_hiddens_proj):
         """ Calculates the attention vector. """
@@ -219,6 +219,7 @@ class EncoderDecoder(BaseBREAKModel):
         self.is_attention = is_attention
         self.is_tied_weights = is_tied_weights
         self.encoder_embedding = nn.Embedding(self.output_size, embedding_dim=self.enc_hidden_size)
+        torch.nn.init.xavier_uniform(self.encoder_embedding.weight)
         if self.is_tied_weights:
             if self.enc_hidden_size != self.dec_hidden_size:
                 raise ValueError('When using the tied flag, enc_hidden_size must be equal to dec_hidden_size')
