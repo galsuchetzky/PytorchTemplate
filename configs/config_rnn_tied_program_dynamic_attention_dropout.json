@@ -13,7 +13,9 @@
             "is_dynamic": true,
             "is_attention": true,
             "is_tied_weights": true,
-            "is_dropout": false,
+            "is_dropout": true,
+            "is_xavier": true,
+            "dropout_rate": 0.1,
             "vocab": {
                 "module": "data_loader.vocabs",
                 "type": "BREAK_vocab_program",
