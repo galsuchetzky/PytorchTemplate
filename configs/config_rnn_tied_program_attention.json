@@ -13,6 +13,9 @@
             "is_dynamic": false,
             "is_attention": true,
             "is_tied_weights": true,
+            "is_dropout": false,
+            "is_xavier": false,
+            "dropout_rate": 0.1,
             "vocab": {
                 "module": "data_loader.vocabs",
                 "type": "BREAK_vocab_program",
@@ -27,6 +30,8 @@
             "data_dir": "data/",
             "batch_size": "constants.batch_size",
             "gold_type": "program",
+            "domain_split": false,
+            "length_split": false,
             "shuffle": true,
             "validation_split": 0,
             "num_workers": 4
