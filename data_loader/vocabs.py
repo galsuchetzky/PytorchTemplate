@@ -236,7 +236,7 @@ def tensor_to_str(vocab, tensor, convert_to_program):
         builder = QDMRProgramBuilder(untokenized)
         builder.build()
         text = str(builder)
-    # text = minimize_program(text)
+    text = minimize_program(text)
     return text
 
 

@@ -18,7 +18,8 @@ class EncoderRNN(BaseModel):
     Simple encoder for seq2seq.
     """
 
-    def __init__(self, batch_size, input_size, hidden_size, vocab, encoder_embedding_weight, device):
+    def __init__(self, batch_size, input_size, hidden_size, is_optimal_encoder, dropout_rate, vocab,
+                 encoder_embedding_weight, device):
         """
         :param input_size: The size of the input tensor.
         :param hidden_size: The size of the hidden state on the RNN.
@@ -27,11 +28,26 @@ class EncoderRNN(BaseModel):
         super().__init__(device)
         self.batch_size = batch_size
         self.hidden_size = hidden_size
+        self.is_optimal_encoder = is_optimal_encoder
         self.vocab = vocab
 
         self.embedding = nn.Embedding(len(self.vocab), hidden_size)
         self.embedding.weight = encoder_embedding_weight
-        self.gru = nn.GRU(input_size, hidden_size, batch_first=True)
+        if self.is_optimal_encoder:
+            self.num_layers = 2
+            self.dropout_rate = dropout_rate
+            self.bidirectional = True
+            self.num_directions = 2
+            self.linear_hidden = nn.Linear(self.num_directions * self.num_layers, 1)
+            self.linear_output = nn.Linear(self.num_directions, 1)
+        else:
+            self.num_layers = 1
+            self.dropout_rate = 0
+            self.bidirectional = False
+            self.num_directions = 1
+        self.gru = nn.GRU(input_size, hidden_size, num_layers=self.num_layers, batch_first=True,
+                          dropout=self.dropout_rate, bidirectional=self.bidirectional)
+        self.a = 1
 
     def forward(self, input, h_0):
         """
@@ -46,14 +62,21 @@ class EncoderRNN(BaseModel):
         # h_0 shape: (1,batch_size,hidden_size)
         # output shape: (batch_size, seq_len, hidden_size)
         output, h_0 = self.gru(input_embeds, h_0)
+        if self.is_optimal_encoder:
+            h_0 = h_0.transpose(0, 2)
+            h_0 = self.linear_hidden(h_0)
+            h_0 = h_0.transpose(0, 2)
 
+            output = self.linear_output(output)
         return output, h_0
 
     def init_hidden(self):
         """
         :return: The initial hidden state of the encoder.
         """
-        return torch.zeros(1, self.batch_size, self.hidden_size)
+        init_h = torch.zeros(self.num_layers * self.num_directions, self.batch_size, self.hidden_size)
+        torch.nn.init.xavier_uniform(init_h)
+        return init_h
 
 
 class DecoderRNN(BaseModel):
@@ -62,7 +85,8 @@ class DecoderRNN(BaseModel):
     """
 
     def __init__(self, batch_size, input_size, enc_hidden_size, hidden_size, is_dynamic,
-                 is_attention, is_tied_weights, is_dropout, is_xavier, is_multilayer, dropout_rate, vocab, sos_str, eos_str,
+                 is_attention, is_tied_weights, is_dropout, is_xavier, is_multilayer, dropout_rate, vocab, sos_str,
+                 eos_str,
                  tied_weight, device, **kwargs):
         """
         :param input_size: The size of the input tensor.
@@ -103,8 +127,6 @@ class DecoderRNN(BaseModel):
 
         # For Dropout
         self.dropout = nn.Dropout(p=dropout_rate)
-
-
 
         if is_xavier:
             torch.nn.init.xavier_uniform(self.W_project_hidden.weight)
@@ -219,7 +241,8 @@ class EncoderDecoder(BaseBREAKModel):
     """
 
     def __init__(self, batch_size, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, is_dynamic,
-                 is_attention, is_tied_weights, is_dropout, is_xavier, is_multilayer, dropout_rate, vocab, device):
+                 is_attention, is_tied_weights, is_dropout, is_xavier, is_multilayer, is_optimal_encoder, dropout_rate,
+                 vocab, device):
         """
         :param enc_input_size: The dimension of the input embeddings for the encoder.
         :param dec_input_size: The dimension of the input embeddings for the decoder.
@@ -246,17 +269,20 @@ class EncoderDecoder(BaseBREAKModel):
         self.is_dropout = is_dropout
         self.is_xavier = is_xavier
         self.is_multilayer = is_multilayer
+        self.is_optimal_encoder = is_optimal_encoder
         self.encoder_embedding = nn.Embedding(self.output_size, embedding_dim=self.enc_hidden_size)
         torch.nn.init.xavier_uniform(self.encoder_embedding.weight)
         if self.is_tied_weights:
             if self.enc_hidden_size != self.dec_hidden_size:
                 raise ValueError('When using the tied flag, enc_hidden_size must be equal to dec_hidden_size')
 
-        self.encoder = EncoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.vocab,
-                                  self.encoder_embedding.weight, self.device)
+        self.encoder = EncoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.is_optimal_encoder,
+                                  dropout_rate,
+                                  self.vocab, self.encoder_embedding.weight, self.device)
         self.decoder = DecoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.dec_hidden_size,
                                   self.is_dynamic, self.is_attention, self.is_tied_weights, self.is_dropout,
-                                  self.is_xavier, self.is_multilayer, dropout_rate, self.vocab, self.SOS_STR, self.EOS_STR,
+                                  self.is_xavier, self.is_multilayer, dropout_rate, self.vocab, self.SOS_STR,
+                                  self.EOS_STR,
                                   self.encoder_embedding.weight, self.device)
 
     def forward(self, input_tensor, target_tensor, lexicon_ids, evaluation_mode=False, **kwargs):
