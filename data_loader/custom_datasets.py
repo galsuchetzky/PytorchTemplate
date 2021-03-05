@@ -12,7 +12,7 @@ from subprocess import run
 from tester.BREAK_evaluate_predictions import format_qdmr
 from utils.qdmr_identifier import *
 
-DEBUG_EXAMPLES_AMOUNT = 80
+DEBUG_EXAMPLES_AMOUNT = 150
 
 
 class BREAKLogical(data.Dataset):
