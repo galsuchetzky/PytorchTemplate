@@ -2,9 +2,11 @@ import torch.utils.data as data
 import numpy as np
 import spacy
 import logging
+import pandas as pd
 
 from logger.logger import setup_logging, LOGGER_SETUP
 from nlp import load_dataset
+from datasets import Dataset
 from pathlib import Path
 from utils.util import save_obj, load_obj, read_json, write_json
 from subprocess import run
@@ -19,7 +21,7 @@ class BREAKLogical(data.Dataset):
     The Break dataset: https://github.com/allenai/Break.
     """
 
-    def __init__(self, data_dir, gold_type, domain_split, train=True, valid=False, debug=False):
+    def __init__(self, data_dir, gold_type, domain_split, length_split, train=True, valid=False, debug=False):
         """
         Initiates the Bread dataset.
         :param data_dir (str):  Path to the data in which to save/ from which to read the dataset.
@@ -38,6 +40,7 @@ class BREAKLogical(data.Dataset):
 
         self.gold_type = gold_type
         self.domain_split = domain_split
+        self.length_split = length_split
         # Load dataset and lexicon
         self.dataset_split = 'test'
         if train:
@@ -52,7 +55,9 @@ class BREAKLogical(data.Dataset):
         if self.domain_split:
             self.logger.info('loading domain split dataset')
             self.dataset_logical = self.load_domain_split_dataset(data_dir, self.logger)
-
+        elif self.length_split:
+            self.logger.info('loading length split dataset')
+            self.dataset_logical = self.load_length_split_dataset(data_dir, self.logger)
         self.logger.info('dataset ready.')
 
         # Download spacy language model
@@ -101,15 +106,69 @@ class BREAKLogical(data.Dataset):
             image_domain_dataset_prefixes = ('CLEVR', 'NLVR2')
             DB_domain_dataset_prefixes = ('ACADEMIC', 'ATIS', 'GEO', 'SPIDER')
             image_plus_DB = image_domain_dataset_prefixes + DB_domain_dataset_prefixes
-            train_dataset = self.dataset_logical['train'].filter(
-                lambda example: example['question_id'].startswith(text_domain_dataset_prefixes))
-            validation_dataset = self.dataset_logical['validation'].filter(
-                lambda example: example['question_id'].startswith(image_plus_DB))
-            test_dataset = self.dataset_logical['test'].filter(
-                lambda example: example['question_id'].startswith(image_plus_DB))
+            train_filtererd = pd.DataFrame()
+            validation_filtererd = pd.DataFrame()
+            test_filtererd = pd.DataFrame()
 
-            # to_save = {'counter': counter, 'specials': specials}
-            to_save = {'train': train_dataset, 'validation': validation_dataset, 'test': test_dataset}
+            for i, example in enumerate(self.dataset_logical['train']):
+                if example['question_id'].startswith(text_domain_dataset_prefixes):
+                    train_filtererd = train_filtererd.append(example, ignore_index=True)
+            for i, example in enumerate(self.dataset_logical['validation']):
+                if example['question_id'].startswith(image_plus_DB):
+                    validation_filtererd = validation_filtererd.append(example, ignore_index=True)
+            for i, example in enumerate(self.dataset_logical['test']):
+                if example['question_id'].startswith(image_plus_DB):
+                    test_filtererd = test_filtererd.append(example, ignore_index=True)
+
+            # train_dataset = self.dataset_logical['train'].filter(
+            #     lambda example: example['question_id'].startswith(text_domain_dataset_prefixes))
+            # validation_dataset = self.dataset_logical['validation'].filter(
+            #     lambda example: example['question_id'].startswith(image_plus_DB))
+            # test_dataset = self.dataset_logical['test'].filter(
+            #     lambda example: example['question_id'].startswith(image_plus_DB))
+            # train_filtererd_ds = Dataset.from_pandas(train_filtererd)
+            to_save = {'train': Dataset.from_pandas(train_filtererd),
+                       'validation': Dataset.from_pandas(validation_filtererd),
+                       'test': Dataset.from_pandas(test_filtererd)}
+            save_obj(dir_path, to_save, file_name)
+
+        dataset = load_obj(dir_path, file_name)
+        return dataset
+
+    def load_length_split_dataset(self, data_dir, logger=None):
+        """
+        Loads break dataset with length split based on number of operators.
+        Train - <= 4 steps.
+        val + test - on DB + images
+        :param data_dir: The path of the directory where the preprocessed dataset should be saved to or loaded from.
+        :param logger: A logger for logging events.
+        :return: The loaded dataset.
+        """
+        current_dir = Path()
+        dir_path = current_dir / "data" / "break_data" / "preprocessed"
+        file_name = "dataset_preprocessed_length_split.pkl"
+        if not (dir_path / file_name).is_file():
+            if logger:
+                logger.info('Creating length split dataset...')
+            threshold_amount_ops = 4
+
+            train_filtererd = pd.DataFrame()
+            validation_filtererd = pd.DataFrame()
+            test_filtererd = pd.DataFrame()
+
+            for i, example in enumerate(self.dataset_logical['train']):
+                if example['operators'].count(',') < threshold_amount_ops:
+                    train_filtererd = train_filtererd.append(example, ignore_index=True)
+            for i, example in enumerate(self.dataset_logical['validation']):
+                if example['operators'].count(',') >= threshold_amount_ops:
+                    validation_filtererd = validation_filtererd.append(example, ignore_index=True)
+            for i, example in enumerate(self.dataset_logical['test']):
+                if example['operators'].count(',') >= threshold_amount_ops:
+                    test_filtererd = test_filtererd.append(example, ignore_index=True)
+
+            to_save = {'train': Dataset.from_pandas(train_filtererd),
+                       'validation': Dataset.from_pandas(validation_filtererd),
+                       'test': Dataset.from_pandas(test_filtererd)}
             save_obj(dir_path, to_save, file_name)
 
         dataset = load_obj(dir_path, file_name)
@@ -207,12 +266,13 @@ class BREAKLogical(data.Dataset):
         file_name = "lexicon"
         if self.domain_split:
             file_name += "_domain_split"
+        elif self.length_split:
+            file_name += "_length_split"
         file_name += ".pkl"
         if not (dir_path / file_name).is_file():
             self.create_matching_lexicon(dir_path, file_name)
         data = load_obj(dir_path, file_name)
-        # TODO these lines turn the string repr of lists to real lists, but slow. save to file or something.
-        # TODO uncomment this
+
         # for type in data:
         #     for ex in data[type]:
         #         data[type][ex] = ast.literal_eval(data[type][ex])

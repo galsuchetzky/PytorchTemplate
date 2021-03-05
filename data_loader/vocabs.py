@@ -75,7 +75,7 @@ def get_specials_program():
     operators = list(phrases_by_operators.keys())
     # phrases = [phrase for phrase_list in phrases_by_operators.values() for phrase in phrase_list]
     simple_specials = get_specials_qdmr()
-    specials = operators + simple_specials + sep_specials
+    specials = sep_specials + operators + simple_specials
     return specials
 
 
@@ -236,7 +236,7 @@ def tensor_to_str(vocab, tensor, convert_to_program):
         builder = QDMRProgramBuilder(untokenized)
         builder.build()
         text = str(builder)
-        text = minimize_program(text)
+    text = minimize_program(text)
     return text
 
 
