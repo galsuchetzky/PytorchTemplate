@@ -93,7 +93,8 @@ class DecoderRNN(BaseModel):
         # as the first decoder hidden state, in case the two dimensions don't match
         self.W_project_hidden = nn.Linear(enc_hidden_size, hidden_size)
 
-        self.gru_cell = nn.GRUCell(self.input_size, self.hidden_size)
+        self.gru_cell0 = nn.GRUCell(self.input_size, self.hidden_size)
+        self.gru_cell1 = nn.GRUCell(self.hidden_size, self.hidden_size)
 
         # for attention
         self.W_project_outputs = nn.Linear(self.enc_hidden_size, self.hidden_size)
@@ -153,7 +154,8 @@ class DecoderRNN(BaseModel):
         # enc_outputs dim (batch_size, question_length, enc_hidden_size)
         # encoder_hiddens_proj dim (batch_size, question_length, hidden_size)
         encoder_hiddens_proj = self.W_project_outputs(enc_outputs)
-
+        h0 = h
+        h1 = h
         # loop through each index in the targets (all the batch targets together), except the last one
         for i, target in enumerate(torch.transpose(targets, 0, 1)[:-1]):
             if evaluation_mode and i > 0:  # use the output of the model rather then the target as input only for evaluation
@@ -168,8 +170,9 @@ class DecoderRNN(BaseModel):
                 input = self.dropout(input)
 
             # h dim (batch_size, hidden_size)
-            h = self.gru_cell(input, h)
-
+            h0 = self.gru_cell0(input, h0)
+            h1 = self.gru_cell1(h0, h1)
+            h = h1
             if self.is_dropout:
                 h = self.dropout(h)
 
