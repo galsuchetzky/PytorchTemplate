@@ -62,8 +62,8 @@ class DecoderRNN(BaseModel):
     """
 
     def __init__(self, batch_size, input_size, enc_hidden_size, hidden_size, is_dynamic,
-                 is_attention, is_tied_weights, is_dropout, is_xavier, vocab, sos_str, eos_str, tied_weight, device,
-                 dropout_rate, **kwargs):
+                 is_attention, is_tied_weights, is_dropout, is_xavier, dropout_rate, vocab, sos_str, eos_str,
+                 tied_weight, device, **kwargs):
         """
         :param input_size: The size of the input tensor.
         :param hidden_size: The size of the hidden states of the decoder.
@@ -210,7 +210,7 @@ class EncoderDecoder(BaseBREAKModel):
     """
 
     def __init__(self, batch_size, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, is_dynamic,
-                 is_attention, is_tied_weights, is_dropout, is_xavier, vocab, device):
+                 is_attention, is_tied_weights, is_dropout, is_xavier, dropout_rate, vocab, device):
         """
         :param enc_input_size: The dimension of the input embeddings for the encoder.
         :param dec_input_size: The dimension of the input embeddings for the decoder.
@@ -243,8 +243,9 @@ class EncoderDecoder(BaseBREAKModel):
         self.encoder = EncoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.vocab,
                                   self.encoder_embedding.weight, self.device)
         self.decoder = DecoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.dec_hidden_size,
-                                  self.is_dynamic, self.is_attention, self.is_tied_weights, self.vocab,
-                                  self.SOS_STR, self.EOS_STR, self.encoder_embedding.weight, self.device)
+                                  self.is_dynamic, self.is_attention, self.is_tied_weights, self.is_dropout,
+                                  self.is_xavier, dropout_rate, self.vocab, self.SOS_STR, self.EOS_STR,
+                                  self.encoder_embedding.weight, self.device)
 
     def forward(self, input_tensor, target_tensor, lexicon_ids, evaluation_mode=False, **kwargs):
         encoder_hidden_first = self.encoder.init_hidden().to(self.device)
