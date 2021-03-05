@@ -15,6 +15,7 @@
             "is_tied_weights": true,
             "is_dropout": false,
             "is_xavier": false,
+            "is_multilayer": false,
             "dropout_rate": 0.1,
             "vocab": {
                 "module": "data_loader.vocabs",
