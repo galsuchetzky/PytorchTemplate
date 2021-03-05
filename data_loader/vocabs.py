@@ -5,7 +5,7 @@ import ast
 from pathlib import Path
 from collections import Counter
 from torchtext.vocab import Vocab
-from utils.util import save_obj, load_obj
+from utils.util import save_obj, load_obj, minimize_program
 from data_loader.custom_datasets import BREAKLogical
 from torchtext.data.utils import get_tokenizer
 from utils.qdmr_identifier import *
@@ -211,16 +211,6 @@ def tokenize_lexicon_str(vocab, lexicon_str, pad_max_length, device):
     out_mask = torch.stack(out_mask).to(device)
     return out_tensor, out_mask
 
-def minimize_program(program):
-    """
-    :param program:
-    :return: program without anchor tokens
-    """
-    ARG_SEP = '@@ARG_SEP@@ '
-    OP_SEP = '@@OP_SEP@@ '
-    minimized = program.replace(ARG_SEP, "")
-    minimized = minimized.replace(OP_SEP, "")
-    return minimized
 
 def tensor_to_str(vocab, tensor, convert_to_program):
     """
@@ -236,7 +226,7 @@ def tensor_to_str(vocab, tensor, convert_to_program):
         builder = QDMRProgramBuilder(untokenized)
         builder.build()
         text = str(builder)
-    # text = minimize_program(text)
+    text = minimize_program(text)
     return text
 
 

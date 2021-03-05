@@ -9,6 +9,7 @@ from itertools import repeat
 from collections import OrderedDict
 import pickle
 
+
 # TODO add documentations for the functions here.
 
 def ensure_dir(dirname):
@@ -118,12 +119,13 @@ def time_remaining(since, percent):
     rs = es - s
     return '%s' % asMinutes(rs)
 
+
 # TODO credit https://github.com/allenai/allennlp
 def masked_softmax(
-    vector: torch.Tensor,
-    mask: torch.BoolTensor,
-    dim: int = -1,
-    memory_efficient: bool = False,
+        vector: torch.Tensor,
+        mask: torch.BoolTensor,
+        dim: int = -1,
+        memory_efficient: bool = False,
 ) -> torch.Tensor:
     """
     `torch.nn.functional.softmax(vector)` does not work if some elements of `vector` should be
@@ -151,12 +153,13 @@ def masked_softmax(
             result = torch.nn.functional.softmax(vector * mask, dim=dim)
             result = result * mask
             result = result / (
-                result.sum(dim=dim, keepdim=True) + tiny_value_of_dtype(result.dtype)
+                    result.sum(dim=dim, keepdim=True) + tiny_value_of_dtype(result.dtype)
             )
         else:
             masked_vector = vector.masked_fill(~mask, min_value_of_dtype(vector.dtype))
             result = torch.nn.functional.softmax(masked_vector, dim=dim)
     return result
+
 
 # TODO credit https://github.com/allenai/allennlp
 def tiny_value_of_dtype(dtype: torch.dtype):
@@ -175,6 +178,7 @@ def tiny_value_of_dtype(dtype: torch.dtype):
     else:
         raise TypeError("Does not support dtype " + str(dtype))
 
+
 # TODO credit https://github.com/allenai/allennlp
 def info_value_of_dtype(dtype: torch.dtype):
     """
@@ -187,9 +191,22 @@ def info_value_of_dtype(dtype: torch.dtype):
     else:
         return torch.iinfo(dtype)
 
+
 # TODO credit https://github.com/allenai/allennlp
 def min_value_of_dtype(dtype: torch.dtype):
     """
     Returns the minimum value of a given PyTorch data type. Does not allow torch.bool.
     """
     return info_value_of_dtype(dtype).min
+
+
+def minimize_program(program):
+    """
+    :param program:
+    :return: program without anchor tokens
+    """
+    ARG_SEP = '@@ARG_SEP@@ '
+    OP_SEP = '@@OP_SEP@@ '
+    minimized = program.replace(ARG_SEP, "")
+    minimized = minimized.replace(OP_SEP, "")
+    return minimized

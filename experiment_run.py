@@ -31,7 +31,7 @@ debug = ' --debug True'
 start_time = time()
 
 for configuration in best_configs:
-    experiment = command + configuration# + debug
+    experiment = command + configuration #+ debug
 
     print('running experiment: ', configuration)
     os.system(experiment)
