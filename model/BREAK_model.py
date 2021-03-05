@@ -62,7 +62,8 @@ class DecoderRNN(BaseModel):
     """
 
     def __init__(self, batch_size, input_size, enc_hidden_size, hidden_size, is_dynamic,
-                 is_attention, is_tied_weights, vocab, sos_str, eos_str, tied_weight, device, **kwargs):
+                 is_attention, is_tied_weights, is_dropout, is_xavier, vocab, sos_str, eos_str, tied_weight, device,
+                 dropout_rate, **kwargs):
         """
         :param input_size: The size of the input tensor.
         :param hidden_size: The size of the hidden states of the decoder.
@@ -78,6 +79,8 @@ class DecoderRNN(BaseModel):
         self.is_dynamic = is_dynamic
         self.is_attention = is_attention
         self.is_tied_weights = is_tied_weights
+        self.is_dropout = is_dropout
+        self.is_xavier = is_xavier
 
         self.vocab = vocab
         self.output_size = len(self.vocab)
@@ -89,15 +92,20 @@ class DecoderRNN(BaseModel):
         # for projecting the last hidden state of the encoder to the decoder space,
         # as the first decoder hidden state, in case the two dimensions don't match
         self.W_project_hidden = nn.Linear(enc_hidden_size, hidden_size)
-        torch.nn.init.xavier_uniform(self.W_project_hidden.weight)
 
         self.gru_cell = nn.GRUCell(self.input_size, self.hidden_size)
 
         # for attention
         self.W_project_outputs = nn.Linear(self.enc_hidden_size, self.hidden_size)
-        torch.nn.init.xavier_uniform(self.W_project_outputs.weight)
         self.W_attn_combine = nn.Linear(2 * self.hidden_size, self.hidden_size)
-        torch.nn.init.xavier_uniform(self.W_attn_combine.weight)
+
+        # For Dropout
+        self.dropout = nn.Dropout(p=dropout_rate)
+
+        if is_xavier:
+            torch.nn.init.xavier_uniform(self.W_project_hidden.weight)
+            torch.nn.init.xavier_uniform(self.W_project_outputs.weight)
+            torch.nn.init.xavier_uniform(self.W_attn_combine.weight)
 
         # for output
         self.W_out = nn.Linear(self.hidden_size, self.output_size)
@@ -131,6 +139,8 @@ class DecoderRNN(BaseModel):
         # h dim after (batch_size, hidden_size)
         # Project the last hidden state of the encoder to the input size of the decoder.
         h = self.W_project_hidden(h).squeeze(0)
+        if self.is_dropout:
+            h = self.dropout(h)
 
         # start_token = torch.tensor(self.vocab[self.SOS_STR], device=self.device).view(1, -1)
         start_token = torch.full(size=(self.batch_size, 1), fill_value=self.vocab[self.SOS_STR], device=self.device)
@@ -154,8 +164,14 @@ class DecoderRNN(BaseModel):
             # target dim (batch_size)
             # input dim  (batch_size, hidden_size)
 
+            if self.is_dropout:
+                input = self.dropout(input)
+
             # h dim (batch_size, hidden_size)
             h = self.gru_cell(input, h)
+
+            if self.is_dropout:
+                h = self.dropout(h)
 
             if self.is_attention:
                 attention_vec = self.CalculateAttention(h, encoder_hiddens_proj)
@@ -194,7 +210,7 @@ class EncoderDecoder(BaseBREAKModel):
     """
 
     def __init__(self, batch_size, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, is_dynamic,
-                 is_attention, is_tied_weights, vocab, device):
+                 is_attention, is_tied_weights, is_dropout, is_xavier, vocab, device):
         """
         :param enc_input_size: The dimension of the input embeddings for the encoder.
         :param dec_input_size: The dimension of the input embeddings for the decoder.
