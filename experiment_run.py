@@ -1,5 +1,7 @@
 import os
 from time import time
+from os import listdir
+from os.path import isfile, join
 
 configurations = [
     'configs/config_rnn_untied_qdmr.json',  # gru_untied_qdmr
@@ -18,13 +20,19 @@ configurations = [
 test_configs = [
     'configs/config_rnn_tied_program_attention.json'
 ]
+
 test_configurations = [
     'configs_Itay/config_rnn_tied_program.json'
 ]
+
 best_configs = [
     'configs/config_rnn_tied_program_dynamic_attention_dropout.json',
     'configs/config_rnn_tied_qdmr_dynamic_attention_dropout.json'
 ]
+
+capacity_configs_path = 'configs_capacity/'
+capacity_configs = [conf for conf in listdir(capacity_configs_path) if isfile(join(capacity_configs_path, conf))]
+
 command = 'python train.py -c '
 debug = ' --debug True'
 
