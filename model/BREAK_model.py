@@ -112,7 +112,7 @@ class DecoderRNN(BaseModel):
         self.SOS_STR = sos_str
         self.EOS_STR = eos_str
 
-        self.embedding = nn.Embedding(self.output_size, embedding_dim=self.hidden_size)
+        self.embedding = nn.Embedding(self.output_size, embedding_dim=self.input_size)
 
         # for projecting the last hidden state of the encoder to the decoder space,
         # as the first decoder hidden state, in case the two dimensions don't match
