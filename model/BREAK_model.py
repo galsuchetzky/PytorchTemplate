@@ -39,7 +39,7 @@ class EncoderRNN(BaseModel):
             self.bidirectional = True
             self.num_directions = 2
             self.linear_hidden = nn.Linear(self.num_directions * self.num_layers, 1)
-            self.linear_output = nn.Linear(self.num_directions, 1)
+            self.linear_output = nn.Linear(self.num_directions * self.hidden_size, self.hidden_size)
         else:
             self.num_layers = 1
             self.dropout_rate = 0
@@ -47,7 +47,7 @@ class EncoderRNN(BaseModel):
             self.num_directions = 1
         self.gru = nn.GRU(input_size, hidden_size, num_layers=self.num_layers, batch_first=True,
                           dropout=self.dropout_rate, bidirectional=self.bidirectional)
-        self.a = 1
+
 
     def forward(self, input, h_0):
         """

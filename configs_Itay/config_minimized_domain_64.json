@@ -6,16 +6,21 @@
         "type": "EncoderDecoder",
         "args": {
             "batch_size": "constants.batch_size",
-            "enc_input_size": 256,
-            "dec_input_size": 256,
-            "enc_hidden_size": 256,
-            "dec_hidden_size": 256,
-            "is_dynamic": false,
+            "enc_input_size": 64,
+            "dec_input_size": 64,
+            "enc_hidden_size": 64,
+            "dec_hidden_size": 64,
+            "is_dynamic": true,
             "is_attention": true,
             "is_tied_weights": true,
+            "is_dropout": true,
+            "is_xavier": true,
+            "is_multilayer": true,
+            "is_optimal_encoder": true,
+            "dropout_rate": 0.1,
             "vocab": {
                 "module": "data_loader.vocabs",
-                "type": "BREAK_vocab_qdmr",
+                "type": "BREAK_vocab_program",
                 "args": {}
             }
         }
@@ -26,7 +31,9 @@
         "args": {
             "data_dir": "data/",
             "batch_size": "constants.batch_size",
-            "gold_type": "qdmr",
+            "gold_type": "minimized_program",
+            "domain_split": true,
+            "length_split": false,
             "shuffle": true,
             "validation_split": 0,
             "num_workers": 4
@@ -78,6 +85,6 @@
         "examples_amount": 100
     },
     "constants" : {
-        "batch_size": 32
+        "batch_size": 4
     }
 }
