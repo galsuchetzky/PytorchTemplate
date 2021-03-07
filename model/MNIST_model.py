@@ -4,7 +4,7 @@ import torch.nn as nn
 from .base_model import BaseModel
 
 
-# TODO documentation.
+# TODO remove for final submission
 class MnistModel(BaseModel):
     def __init__(self, device, num_classes=10):
         super().__init__(device)

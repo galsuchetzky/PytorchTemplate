@@ -10,15 +10,23 @@ from collections import OrderedDict
 import pickle
 
 
-# TODO add documentations for the functions here.
-
 def ensure_dir(dirname):
+    """
+    Check if a directory exists, if not - create it.
+    :param dirname: The name of the directory.
+    """
     dirname = Path(dirname)
     if not dirname.is_dir():
         dirname.mkdir(parents=True, exist_ok=False)
 
 
 def save_obj(dir_path, obj, name):
+    """
+    Saves an object as a pickle file.
+    :param dir_path: The directory in which to save the object.
+    :param obj: The object to save.
+    :param name: The name of the saved object file.
+    """
     Path(dir_path).mkdir(parents=True, exist_ok=True)
     file_path = dir_path / (name)
     if not file_path.is_file():
@@ -27,18 +35,34 @@ def save_obj(dir_path, obj, name):
 
 
 def load_obj(dir_path, name):
+    """
+    Loads a pickle object.
+    :param dir_path: The directory from which to read the file.
+    :param name: The name of the file to read.
+    :return: The read object.
+    """
     file_path = dir_path / (name)
     with open(str(file_path), 'rb') as f:
         return pickle.load(f)
 
 
 def read_json(fname):
+    """
+    Read a json file.
+    :param fname: The path of the file to read.
+    :return: The loaded file.
+    """
     fname = Path(fname)
     with fname.open('rt') as handle:
         return json.load(handle, object_hook=OrderedDict)
 
 
 def write_json(content, fname):
+    """
+    Saves a json file.
+    :param content: The data to save.
+    :param fname: The name of the saved file.
+    """
     fname = Path(fname)
     with fname.open('wt') as handle:
         json.dump(content, handle, indent=4, sort_keys=False)
@@ -69,6 +93,10 @@ def prepare_device(n_gpu_use):
 
 
 class MetricTracker:
+    """
+    Tracks the metrics used in the training and evaluation process.
+    """
+
     def __init__(self, *keys, writer=None):
         self.writer = writer
         self._data = pd.DataFrame(index=keys, columns=['total', 'counts', 'average'])
@@ -92,6 +120,7 @@ class MetricTracker:
         return {k: round(v, 5) for k, v in dict(self._data.average).items()}
 
 
+# Time tracking and representation functions.
 def asMinutes(s):
     m = math.floor(s / 60)
     s -= m * 60

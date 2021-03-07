@@ -8,11 +8,12 @@ from logger.logger import setup_logging, LOGGER_SETUP
 from nlp import load_dataset
 from datasets import Dataset
 from pathlib import Path
-from utils.util import save_obj, load_obj, read_json, write_json, minimize_program
+from utils.util import save_obj, load_obj, minimize_program
 from subprocess import run
 from tester.BREAK_evaluate_predictions import format_qdmr
 from utils.qdmr_identifier import *
 
+# Amount of examples to use in debug mode
 DEBUG_EXAMPLES_AMOUNT = 150
 
 
@@ -41,6 +42,7 @@ class BREAKLogical(data.Dataset):
         self.gold_type = gold_type
         self.domain_split = domain_split
         self.length_split = length_split
+
         # Load dataset and lexicon
         self.dataset_split = 'test'
         if train:
@@ -83,18 +85,18 @@ class BREAKLogical(data.Dataset):
             self.lexicon_str = self.lexicon_str[:DEBUG_EXAMPLES_AMOUNT]
             self.programs = self.programs[:DEBUG_EXAMPLES_AMOUNT]
 
-        # # Replace all the reference tokens of the form #<num> with the tokens @@<num>@@
-        # self.qdmrs = [re.sub(r'#(\d+)', r'@@\1@@', qdmr) for qdmr in self.qdmrs]
-
     def get_dataset_split(self):
+        """
+        :return: The current split used (train, val or test)
+        """
         return self.dataset_split
 
     def load_domain_split_dataset(self, data_dir, logger=None):
         """
         Loads break dataset with domain split. Train - on text. val + test - on DB + images
-        :param data_dir: The path of the directory where the preprocessed dataset should be saved to or loaded from.
-        :param logger: A logger for logging events.
-        :return: The loaded dataset.
+        :param data_dir:    The path of the directory where the preprocessed dataset should be saved to or loaded from.
+        :param logger:      A logger for logging events.
+        :return:            The loaded dataset.
         """
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "preprocessed"
@@ -120,6 +122,7 @@ class BREAKLogical(data.Dataset):
                 if example['question_id'].startswith(image_plus_DB):
                     test_filtererd = test_filtererd.append(example, ignore_index=True)
 
+            # TODO delete this?
             # train_dataset = self.dataset_logical['train'].filter(
             #     lambda example: example['question_id'].startswith(text_domain_dataset_prefixes))
             # validation_dataset = self.dataset_logical['validation'].filter(
@@ -144,9 +147,11 @@ class BREAKLogical(data.Dataset):
         :param logger: A logger for logging events.
         :return: The loaded dataset.
         """
+        # TODO datadir required in signature?
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "preprocessed"
         file_name = "dataset_preprocessed_length_split.pkl"
+
         if not (dir_path / file_name).is_file():
             if logger:
                 logger.info('Creating length split dataset...')
@@ -210,10 +215,9 @@ class BREAKLogical(data.Dataset):
             golds = self.programs[idx]
         elif self.gold_type == 'minimized_program':
             golds = minimize_program(self.programs[idx])
+
         example = (self.ids[idx], self.questions[idx], golds, self.lexicon_str[idx])
 
-        # without lexicon
-        # example = (self.ids[idx], self.questions[idx], golds)
         return example
 
     def __len__(self):
@@ -233,6 +237,11 @@ class BREAKLogical(data.Dataset):
         return self[idx]
 
     def create_matching_lexicon(self, dir_path, file_name):
+        """
+        Creates the lexicons for the questions.
+        :param dir_path: The path in which to save the created lexicon.
+        :param file_name: The name of the lexicon.
+        """
         # There are more examples in the lexicon dataset than in the logical examples
         # This function creates one-to-one mapping between them and stores lexicon dict in a file
         self.logger.info('Creating lexicon...')
@@ -250,10 +259,6 @@ class BREAKLogical(data.Dataset):
                     if lexicon_example['source'] == question:
                         str_lex = lexicon_example['allowed_tokens']
                         lexicon_lists[data_split].append(str_lex)
-                        # TODO remove, its testing code
-                        # lexicon_dict[data_split][i]
-                        # if str_lex[2] != 'h':
-                        #     print("Holy")
                         lex_idx = j + 1
                         lexcion_found = True
                         break
@@ -264,20 +269,26 @@ class BREAKLogical(data.Dataset):
         self.logger.info('Done creating lexicon.')
 
     def get_lexicon(self):
-        # TODO add documentation
+        """
+        Prepares the lexicon, creating it if needed and loads it.
+        :return: The loaded lexicon.
+        """
         self.logger.info("Preparing lexicon...")
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "lexicon_by_logical"
         file_name = "lexicon"
+
         if self.domain_split:
             file_name += "_domain_split"
         elif self.length_split:
             file_name += "_length_split"
         file_name += ".pkl"
+
         if not (dir_path / file_name).is_file():
             self.create_matching_lexicon(dir_path, file_name)
         data = load_obj(dir_path, file_name)
 
+        # TODO delete this?
         # for type in data:
         #     for ex in data[type]:
         #         data[type][ex] = ast.literal_eval(data[type][ex])
@@ -285,17 +296,27 @@ class BREAKLogical(data.Dataset):
         return data
 
     def create_matching_programs(self, dir_path, file_name):
-        # TODO add documentation
+        """
+        Creates the matching programs for all the question QDMRs.
+        :param dir_path: The directory in which to save the created programs.
+        :param file_name: The name of the file with the programs.
+        """
         self.logger.info('Creating programs...')
         programs = []
+
         for gold in self.dataset_logical[self.dataset_split]["decomposition"]:
             builder = QDMRProgramBuilder(gold)
             builder.build()
             programs.append(str(builder))
+
         save_obj(dir_path, programs, file_name)
         self.logger.info('Done creating programs.')
 
     def get_programs(self):
+        """
+        Loads the programs from a file.
+        :return: The loaded programs.
+        """
         self.logger.info("Preparing programs...")
         current_dir = Path()
         dir_path = current_dir / "data" / "break_data" / "programs"

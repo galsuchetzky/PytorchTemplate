@@ -6,7 +6,7 @@ from tester.BREAK_evaluation.graph_matcher import GraphMatchScorer
 from tester.BREAK_evaluation.decomposition import Decomposition
 
 
-# TODO bring all the metrics from the BREAK repo.
+# TODO Document all used metrics and remove others for submission.
 def accuracy_MNIST(output, target):
     """
     Tests the accuracy of the prediction to the target.
@@ -50,10 +50,24 @@ def top_k_acc(output, target, k=3):
 
 
 def exact_match(decompositions_str: [str], golds_str: [str], *args):
+    """
+    Checks the percentage of exact matches.
+    :param decompositions_str: The predicted decompositions.
+    :param golds_str: The target strings.
+    :param args: Not used.
+    :return: The percentage of exact matches.
+    """
     return sum([d.lower() == g.lower() for d, g in zip(decompositions_str, golds_str)]) / len(decompositions_str)
 
 
 def sari_score(decompositions_str: [str], golds_str: [str], questions: [str]):
+    """
+    Calculates the SARI score of the prediction.
+    :param decompositions_str: The predicted decompositions.
+    :param golds_str: The target strings.
+    :param questions: The questions before decomposition.
+    :return: The SARI score of the batch.
+    """
     sources = [q.split(" ") for q in questions]
     predictions = [d.split(" ") for d in decompositions_str]
     targets = [[g.split(" ")] for g in golds_str]
@@ -86,6 +100,7 @@ def ged_score(decompositions_str: [str], golds_str: [str], *args):
     ged_scores = graph_scorer.get_edit_distance_match_scores(decomposition_graphs, gold_graphs)
 
     return np.average(ged_scores)
+
 
 def ged_score_decomp(decompositions, golds, *args):
     # decompositions = [Decomposition.from_str(decomp) for decomp in decompositions_str]

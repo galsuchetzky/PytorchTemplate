@@ -9,7 +9,6 @@ class SequenceMatchScorer(object):
     def __init__(self, remove_stop_words):
         self.parser = spacy.load('en_core_web_sm', disable=['ner'])
         self.remove_stop_words = remove_stop_words
-        # TODO: extend the default stop words list?
 
     def clean_base(self, text):
         parsed = self.parser(text)

@@ -28,13 +28,16 @@ class BREAKDataLoader(BaseDataLoader):
         self.dataset = custom_datasets.BREAKLogical(self.data_dir, gold_type, domain_split, length_split,
                                                     train=training, valid=False, debug=debug)
         self.dataset_split = self.dataset.get_dataset_split()
+
         if self.dataset_split == 'test':
             self.shuffle = False
         else:
             self.shuffle = shuffle
+
         self.validation_split = 0.0  # make sure to use all data
         self.drop_last = True
         self.debug = debug
+
         super().__init__(self.dataset, batch_size, self.shuffle, self.validation_split, num_workers,
                          drop_last=self.drop_last)
 
@@ -55,8 +58,7 @@ class BREAKDataLoader(BaseDataLoader):
 
     def gold_type_is_qdmr(self):
         """
-
-        :return:
+        :return: True iff the gold type is qdmr
         """
         return self.gold_type == 'qdmr'
 
@@ -78,14 +80,12 @@ class BREAKDataLoaderValid(BaseDataLoader):
         self.dataset_split = self.dataset.get_dataset_split()
         self.drop_last = True
         super().__init__(self.dataset, batch_size, shuffle, validation_split, num_workers, drop_last=self.drop_last)
-        # print('valid len', len(self.dataset))
 
     def get_dataset_split(self):
         return self.dataset_split
 
     def gold_type_is_qdmr(self):
         """
-
-        :return:
+        :return: True iff the gold type is qdmr
         """
         return self.gold_type == 'qdmr'

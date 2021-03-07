@@ -10,7 +10,7 @@ from .loss import masked_sequence_cross_entropy_with_logits
 
 
 # TODO add documentation and shapes everywhere.
-# TODO remove the "your code here" from the models. give credits in a docstring above to the course.
+# TODO give credits in a docstring above to the course.
 
 
 class EncoderRNN(BaseModel):

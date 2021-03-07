@@ -52,9 +52,7 @@ class BaseTester:
         """
         Evaluate using target
         """
-        # Log start and set timer for timing the train.
-        # TODO uncomment this (find solution for MNIST)
-        # self.logger.info('Starting evaluation on ' + self.data_loader.get_dataset_split() + ' set')
+
         eval_start_time = time.time()
 
         # Sets the model to evaluation mode.

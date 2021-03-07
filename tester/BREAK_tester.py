@@ -7,10 +7,6 @@ from tqdm import tqdm
 from .base_tester import BaseTester
 from utils.util import MetricTracker
 from data_loader.vocabs import batch_to_tensor, batch_to_str, pred_batch_to_str, tokenize_lexicon_str
-from torch.nn import CrossEntropyLoss
-
-
-# TODO add documentation and complete implementation for the Seq2SeqSimpleTrainer
 
 
 class Seq2SeqSimpleTester(BaseTester):
@@ -28,7 +24,6 @@ class Seq2SeqSimpleTester(BaseTester):
         :param device: The device to use for the testing.
         :param data_loader: The dataloader to use for loading the testing data.
         """
-        # TODO add logger and log "starting evaluation"
 
         self.vocab = model.vocab
         self.question_pad_length = config['data_loader']['question_pad_length']

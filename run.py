@@ -10,9 +10,8 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 def run(config, train=True):
     """
-    :param config:
-    :param train:
-    :return: TODO document
+    :param config: The configuration to use for the run.
+    :param train: Train mode or not.
     """
     logger = config.get_logger('train' if train else 'test')
 

@@ -1,35 +1,22 @@
 import torch.nn.functional as F
-
-from torch.nn import CrossEntropyLoss
 import torch
+
 
 def nll_loss():
     return F.nll_loss
+
+
 def cross_entropy_loss():
     return torch.nn.CrossEntropyLoss()
-# class MaskCrossEntropyLoss(CrossEntropyLoss):
-#     def __init__(self):
-#         """
-#         :param
-#         """
-#         super().__init__()
-#
-#     def forward(self, input: Tensor, target: Tensor, mask: Tensor) -> Tensor:
-#         nTotal = mask.sum()
-#         crossEntropy = -torch.log(torch.gather(inp, 1, target.view(-1, 1)).squeeze(1))
-#         loss = crossEntropy.masked_select(mask).mean()
-#         loss = loss.to(device)
-#         return loss, nTotal.item()
-#         return F.cross_entropy(input, target, weight=self.weight,
-#                                ignore_index=self.ignore_index, reduction=self.reduction)
+
 
 # Todo credit https://github.com/tomerwolgithub/Break
 def masked_sequence_cross_entropy_with_logits(logits: torch.FloatTensor,
-                                       logit_mask: torch.FloatTensor,
-                                       targets: torch.LongTensor,
-                                       weights: torch.FloatTensor,
-                                       average: str = "batch",
-                                       label_smoothing: float = None) -> torch.FloatTensor:
+                                              logit_mask: torch.FloatTensor,
+                                              targets: torch.LongTensor,
+                                              weights: torch.FloatTensor,
+                                              average: str = "batch",
+                                              label_smoothing: float = None) -> torch.FloatTensor:
     """
     Computes the cross entropy loss of a sequence, weighted with respect to
     some user provided weights. Note that the weighting here is not the same as

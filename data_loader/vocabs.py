@@ -21,7 +21,6 @@ def BREAK_vocab_qdmr():
     :return: The vocab.
     """
     # Special characters to include in the vocabulary.
-    # TODO move the special tokens (unk, pad ...) to constants out of here.
     specials = get_specials_qdmr()
 
     # Load the dataset and get the words.
@@ -36,8 +35,7 @@ def BREAK_vocab_qdmr():
 
 def get_specials_qdmr():
     """
-
-    :return:
+    :return: The special symbols required for a qdmr decomposition.
     """
     specials = ['<unk>', '<sos>', '<pad>', '<eos>', '@@SEP@@', '@@10@@', '@@11@@', '@@12@@', '@@13@@',
                 '@@14@@', '@@15@@', '@@16@@', '@@17@@', '@@18@@', '@@19@@', '@@1@@',
@@ -47,9 +45,10 @@ def get_specials_qdmr():
 
 def get_specials_program():
     """
-
-    :return:
-    """  # operators = ["select", "filter", "project", "aggregate",
+    :return: The special symbols required for a program decomposition.
+    """
+    # TODO remove this?
+    # operators = ["select", "filter", "project", "aggregate",
     #              "group", "superlative", "comparative",
     #              "union", "intersection", "discard",
     #              "sort", "boolean", "arithmetic",
@@ -73,13 +72,16 @@ def get_specials_program():
     sep_specials = ['@@OP_SEP@@', '@@ARG_SEP@@', '@@REF@@']
 
     operators = list(phrases_by_operators.keys())
-    # phrases = [phrase for phrase_list in phrases_by_operators.values() for phrase in phrase_list]
     simple_specials = get_specials_qdmr()
     specials = sep_specials + operators + simple_specials
     return specials
 
 
 def BREAK_vocab_program():
+    """
+    Creates the vocabulary of a program.
+    :return: The created vocabulary.
+    """
     specials = get_specials_program()
 
     # model should learn that after BOS or '@@SEP@@' it should predict operators
@@ -172,7 +174,7 @@ def batch_to_tensor(vocab, batch, pad_max_length, device):
 
 def tokenize_lexicon_str(vocab, lexicon_str, pad_max_length, device):
     """
-
+    #todo add documentation
     :param lexicon_str:
     :return: a tensor of ids from vocabulary for each . shape=(batch_size,max_length?)
     """
@@ -217,6 +219,7 @@ def tensor_to_str(vocab, tensor, convert_to_program):
     Converts a tensor of indices to a string.
     :param vocab: The vocab to take the strings from.
     :param tensor: A tensor of indices.
+    :param convert_to_program: True if should convert the string to program.
     :return: The result string.
     """
     text = " ".join(vocab.itos[idx] for idx in tensor)
@@ -232,11 +235,11 @@ def tensor_to_str(vocab, tensor, convert_to_program):
 
 def batch_to_str(vocab, batch, mask, convert_to_program):
     """
-
-    :param vocab:
-    :param batch:
-    :param mask:
-    :return:
+    Converts a batch of embedding lists to a batch of strings.
+    :param vocab: The vocabulary to use for the conversion.
+    :param batch: The batch.
+    :param mask: The masks of the batch.
+    :return: A list of strings which are the converted embeddings.
     """
     lst = []
     for data_row, mask_row in zip(batch, mask):
@@ -249,9 +252,9 @@ def pred_batch_to_str(vocab, pred, convert_to_program):
     """
     create mask according to the first appearance of <'EOS_STR'>
     then convert to list of str
-    :param vocab:
-    :param pred:
-    :return:
+    :param vocab: The vocabulary to use for the conversion.
+    :param pred: The predictions to convert.
+    :return: The converted batch.
     """
     eos_id = vocab['<eos>']
     eos_mask = pred == eos_id
