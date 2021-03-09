@@ -26,12 +26,13 @@ class EncoderRNN(BaseModel):
         :param vocab: The input vocabulary.
         """
         super().__init__(device)
+        self.input_size = input_size
         self.batch_size = batch_size
         self.hidden_size = hidden_size
         self.is_optimal_encoder = is_optimal_encoder
         self.vocab = vocab
 
-        self.embedding = nn.Embedding(len(self.vocab), hidden_size)
+        self.embedding = nn.Embedding(len(self.vocab), self.input_size)
         self.embedding.weight = encoder_embedding_weight
         if self.is_optimal_encoder:
             self.num_layers = 2
@@ -45,7 +46,7 @@ class EncoderRNN(BaseModel):
             self.dropout_rate = 0
             self.bidirectional = False
             self.num_directions = 1
-        self.gru = nn.GRU(input_size, hidden_size, num_layers=self.num_layers, batch_first=True,
+        self.gru = nn.GRU(self.input_size, self.hidden_size, num_layers=self.num_layers, batch_first=True,
                           dropout=self.dropout_rate, bidirectional=self.bidirectional)
 
 
@@ -57,7 +58,7 @@ class EncoderRNN(BaseModel):
         :return: the output of the sequence and the initial hidden state.
         """
         # input dim: (batch_size, seq_len)
-        # input_embed dim: (batch_size, seq_len, hidden_size)
+        # input_embed dim: (batch_size, seq_len, input_size)
         input_embeds = self.embedding(input)
         # h_0 shape: (1,batch_size,hidden_size)
         # output shape: (batch_size, seq_len, hidden_size)
@@ -134,7 +135,8 @@ class DecoderRNN(BaseModel):
             torch.nn.init.xavier_uniform_(self.W_attn_combine.weight)
 
         # for output
-        self.W_out = nn.Linear(self.hidden_size, self.output_size)
+        self.W_hidden_to_output = nn.Linear(self.hidden_size, self.input_size)
+        self.W_out = nn.Linear(self.input_size, self.output_size)
         if self.is_tied_weights:
             self.embedding.weight = tied_weight
             self.W_out.weight = tied_weight
@@ -212,6 +214,7 @@ class DecoderRNN(BaseModel):
                 last_hidden = h
             # TODO it must be the last computation in each loop
             # output dim (batch_size,output_size)
+            last_hidden = self.W_hidden_to_output(last_hidden)
             output = self.W_out(last_hidden)
             if self.is_dynamic:
                 fill_value = -1e32
@@ -270,11 +273,11 @@ class EncoderDecoder(BaseBREAKModel):
         self.is_xavier = is_xavier
         self.is_multilayer = is_multilayer
         self.is_optimal_encoder = is_optimal_encoder
-        self.encoder_embedding = nn.Embedding(self.output_size, embedding_dim=self.enc_hidden_size)
+        self.encoder_embedding = nn.Embedding(self.output_size, embedding_dim=self.enc_input_size)
         torch.nn.init.xavier_uniform_(self.encoder_embedding.weight)
-        if self.is_tied_weights:
-            if self.enc_hidden_size != self.dec_hidden_size:
-                raise ValueError('When using the tied flag, enc_hidden_size must be equal to dec_hidden_size')
+        # if self.is_tied_weights:
+        #     if self.enc_input_size != self.dec_input_size:
+        #         raise ValueError('When using the tied flag, enc_hidden_size must be equal to dec_hidden_size')
 
         self.encoder = EncoderRNN(self.batch_size, self.enc_input_size, self.enc_hidden_size, self.is_optimal_encoder,
                                   dropout_rate,
