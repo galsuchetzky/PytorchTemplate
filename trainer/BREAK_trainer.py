@@ -4,7 +4,7 @@ import torch
 from .base_trainer import BaseTrainer
 from utils.util import inf_loop, MetricTracker
 from tqdm import tqdm
-from data_loader.vocabs import batch_to_tensor, tokenize_lexicon_str
+from data_loader.vocabs import batch_to_tensor, tokenize_lexicon_str, batch_to_str, pred_batch_to_str
 from tester.BREAK_tester import Seq2SeqSimpleTester
 
 
@@ -106,14 +106,14 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
 
                 with torch.no_grad():
                     pred = torch.argmax(output, dim=1)
-                    # data_str = batch_to_str(self.vocab, data, mask_data, convert_to_program=False)
-                    # target_str = batch_to_str(self.vocab, target, mask_target, convert_to_program=convert_to_program)
-                    # pred_str = pred_batch_to_str(self.vocab, pred, convert_to_program=convert_to_program)
+                    data_str = batch_to_str(self.vocab, data, mask_data, convert_to_program=False)
+                    target_str = batch_to_str(self.vocab, target, mask_target, convert_to_program=convert_to_program)
+                    pred_str = pred_batch_to_str(self.vocab, pred, convert_to_program=convert_to_program)
 
                 # Update metrics
                 self.train_metrics.update('loss', loss.item())
-                # for met in self.metric_ftns:
-                #     self.train_metrics.update(met.__name__, met(pred_str, target_str, data_str))
+                for met in self.train_metric_ftns:
+                    self.train_metrics.update(met.__name__, met(pred_str, target_str, data_str))
 
                 # Log progress
                 if batch_idx % self.log_step == 0:

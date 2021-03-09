@@ -9,7 +9,7 @@
             "enc_input_size": 256,
             "dec_input_size": 256,
             "enc_hidden_size": 256,
-            "dec_hidden_size": 1024,
+            "dec_hidden_size": 64,
             "is_dynamic": true,
             "is_attention": true,
             "is_tied_weights": true,
@@ -52,7 +52,7 @@
     },
     "loss": "masked_sequence_cross_entropy_with_logits",
     "metrics": {
-        "train_metrics": [],
+        "train_metrics": ["sari_score"],
         "eval_metrics": ["exact_match", "sari_score", "structural_match_ratio"],
         "test_metrics": ["exact_match", "sari_score", "structural_match_ratio"]
     },
