@@ -6,9 +6,9 @@
         "type": "EncoderDecoder",
         "args": {
             "batch_size": "constants.batch_size",
-            "enc_input_size": 1024,
-            "dec_input_size": 1024,
-            "enc_hidden_size": 1024,
+            "enc_input_size": 128,
+            "dec_input_size": 128,
+            "enc_hidden_size": 128,
             "dec_hidden_size": 1024,
             "is_dynamic": true,
             "is_attention": true,
