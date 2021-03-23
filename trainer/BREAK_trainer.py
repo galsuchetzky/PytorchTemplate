@@ -14,7 +14,7 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
     """
 
     def __init__(self, model, criterion, train_metric_ftns, eval_metric_fns, optimizer, config, device,
-                 data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
+                 data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None, validate_only=False):
         """
 
         :param model: The model to train.
@@ -28,6 +28,7 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
         :param valid_data_loader: The validation data loader to use.
         :param lr_scheduler: scheduler for the learning rate.
         :param len_epoch: The amount of examples in an epoch.
+        :param validate_only: use if resumed, only run validation on the last resumed checkpoint.
         """
         self.vocab = model.vocab
         self.pad_idx = self.vocab['<pad>']
@@ -67,6 +68,14 @@ class Seq2SeqSimpleTrainer(BaseTrainer):
                                              self.config,
                                              self.device,
                                              self.valid_data_loader, True)
+
+        # Run validation and exit.
+        if validate_only:
+            val_log = self.evaluator.test()
+            log = {'val_' + k: round(v, 5) for k, v in val_log.items()}
+            print(log)
+            exit()
+
 
     def _train_epoch(self, epoch):
         """
