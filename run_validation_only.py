@@ -3,6 +3,7 @@ from time import time
 from os import listdir
 from os.path import isfile, join
 from subprocess import check_output
+import ast
 
 """
 usage: add in the config in the saved the line '"validate_only": true,' in the trainer part.
@@ -22,17 +23,24 @@ for path in paths:
                          key=lambda checkpoint: int(checkpoint.split('.')[0].replace('checkpoint-epoch','')))
 
     outputs = []
+    i = 0
     for checkpoint in checkpoints:
         command = 'python train.py --resume ' + path + '/' + checkpoint
 
         print('evaluating: ', path.split('/')[-1], checkpoint)
         print()
         out = check_output(command)
-        print(out.decode('utf-8').split('\r\n')[-2])
-        outputs.append(out.decode('utf-8').split('\r\n')[-2])
+        print(ast.literal_eval(out.decode('utf-8').split('\r\n')[-2]))
+        outputs.append(ast.literal_eval(out.decode('utf-8').split('\r\n')[-2]))
+        i += 1
+        if i == 3:
+            break
 
+    # Save only the best output
+    test_metric = 'val_sari_score'
+    max_output = max(outputs, key=lambda log: log[test_metric])
     with open(path + '/validate_only.txt', 'w') as f:
-        f.write('\n'.join(outputs))
+        f.write(str(max_output))
     print()
 
-    #todo need logic to keep the best over all checkpoints and save result to file
+
