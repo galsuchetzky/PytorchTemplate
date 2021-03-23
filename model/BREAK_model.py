@@ -76,7 +76,7 @@ class EncoderRNN(BaseModel):
         :return: The initial hidden state of the encoder.
         """
         init_h = torch.zeros(self.num_layers * self.num_directions, self.batch_size, self.hidden_size)
-        torch.nn.init.xavier_uniform(init_h)
+        torch.nn.init.xavier_uniform_(init_h)
         return init_h
 
 
