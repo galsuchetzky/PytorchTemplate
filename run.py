@@ -61,7 +61,8 @@ def run(config, train=True):
                                 device=device,
                                 data_loader=data_loader,
                                 valid_data_loader=valid_data_loader,
-                                lr_scheduler=lr_scheduler)
+                                lr_scheduler=lr_scheduler,
+                                validate_only=cfg_trainer['validate_only'])
 
         trainer.train()
     else:  # Run tester.
