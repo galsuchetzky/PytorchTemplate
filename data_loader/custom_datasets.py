@@ -78,12 +78,14 @@ class BREAKLogical(data.Dataset):
         self.qdmrs = [format_qdmr(decomp) for decomp in self.dataset_logical[self.dataset_split]["decomposition"]]
         self.programs = self.get_programs()
 
+
         if debug:
             self.ids = self.ids[:DEBUG_EXAMPLES_AMOUNT]
             self.questions = self.questions[:DEBUG_EXAMPLES_AMOUNT]
             self.qdmrs = self.qdmrs[:DEBUG_EXAMPLES_AMOUNT]
             self.lexicon_str = self.lexicon_str[:DEBUG_EXAMPLES_AMOUNT]
             self.programs = self.programs[:DEBUG_EXAMPLES_AMOUNT]
+
 
     def get_dataset_split(self):
         """

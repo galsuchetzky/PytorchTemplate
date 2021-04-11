@@ -5,6 +5,13 @@ from nlp import load_dataset
 from pathlib import Path
 from utils.util import read_json, write_json
 from collections import defaultdict
+from utils.qdmr_identifier import *
+from torchtext.data.utils import get_tokenizer
+import spacy
+
+spacy.load('en_core_web_sm')
+
+en_tokenizer = get_tokenizer('spacy', language='en_core_web_sm')
 
 
 def save_obj(dir_path, obj, name):
@@ -23,14 +30,35 @@ def load_obj(dir_path, name):
         return pickle.load(f)
 
 
+
+
+
 QDMR = load_dataset('break_data', 'QDMR', cache_dir='.\\data\\')
 LEXICON = load_dataset('break_data', 'QDMR-lexicon', cache_dir='.\\data\\')
 LOGICAL = load_dataset('break_data', 'logical-forms', cache_dir='.\\data\\')
 # for t in s:
 # 	print(t, s[t])
-print("QDMR len of train", len(QDMR['test']),"************")
-for p in QDMR['test'][1]:
-	print(p, QDMR['test'][1][p])
+print("QDMR len of train", len(QDMR['train']),"************")
+total_q = 0
+total_p = 0
+for i in range(len(QDMR['train'])):
+    q = QDMR['train'][i]['decomposition']
+    q_list = en_tokenizer(QDMR['train'][i]['decomposition'])
+    builder = QDMRProgramBuilder(q)
+    builder.build()
+    p_list = en_tokenizer(str(builder))
+    total_q += len(q_list)
+    total_p += len(p_list)
+    if i % 1000 == 0:
+        print(i)
+
+total_q /= len(QDMR['train'])
+total_p /= len(QDMR['train'])
+print(total_p)
+print(total_q)
+
+# for p in QDMR['train'][1]:
+# 	print(p, QDMR['train'][1][p])
 # print("------------------------------------")
 # print("LEXICON len of train", len(LEXICON['train']), "************")
 
@@ -41,11 +69,11 @@ for p in QDMR['test'][1]:
 # for p in LOGICAL['train'][40096]:
 # 	print(p, LOGICAL['train'][40096][p])
 
-lex_idx = 0
-log_idx = 0
-train_map = {}
-train_check = {}
-start = time.time()
+# lex_idx = 0
+# log_idx = 0
+# train_map = {}
+# train_check = {}
+# start = time.time()
 # for i, example in enumerate(LOGICAL['train']):
 # 	ques = example['question_text']
 # 	for j in range(lex_idx, len(LEXICON['train'])):
