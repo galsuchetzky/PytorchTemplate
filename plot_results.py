@@ -34,13 +34,15 @@ def plot_complexity():
     ax1.set_ylabel('Absolute SARI Scores')
     ax1.set_xticks(x)
     ax1.set_xticklabels(complexity_names, horizontalalignment='right')
-    ax1.legend(loc=1)
+    ax1.legend(loc=0)
 
     autolabel(rects1, ax1)
     autolabel(rects2, ax1)
 
+    # sns.set(font_scale=3)
     a = sns.barplot(x=complexity_names, y=complexity_gaps_sari, palette="rocket", ax=ax2)
     ax2.axhline(0, color="k", clip_on=False)
+    ax2.tick_params(labelsize=20)
     ax2.set_ylabel("Gaps (Program - QDMR)")
 
     sns.despine(bottom=True)
@@ -49,6 +51,14 @@ def plot_complexity():
 
 
 def plot_capacity(qdmr, minimized, program, plot_name):
+    import matplotlib.pylab as pylab
+    params = {'legend.fontsize': 'large',
+              'figure.figsize': (15, 5),
+              'axes.labelsize': 'x-large',
+              'axes.titlesize': 'x-large',
+              'xtick.labelsize': 'x-large',
+              'ytick.labelsize': 'x-large'}
+    pylab.rcParams.update(params)
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
     fig.suptitle(plot_name, fontsize=16)
     bar_width = 0.1
